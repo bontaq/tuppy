@@ -63,3 +63,100 @@ clex n [] = []
 --
 -- parse
 --
+
+type Parser a = [Token] -> [(a, [Token])]
+
+keywords :: [String]
+keywords = ["let", "letrect", "case", "in", "of", "Pack"]
+
+-- parse literal
+pLit :: String -> Parser String
+pLit s = pSat (== s)
+
+pVar :: Parser String
+pVar = pSat (not . (flip elem) keywords)
+
+pNum :: Parser Int
+pNum = pApply (pSat (all isDigit)) (\c -> read c :: Int)
+
+-- combining two parsers, returns whichever matched
+pAlt :: Parser a -> Parser a -> Parser a
+pAlt p1 p2 toks = (p1 toks) ++ (p2 toks)
+
+-- example that matches hello or goodbye
+pHelloOrGoodbye :: Parser String
+pHelloOrGoodbye = (pLit "hello") `pAlt` (pLit "goodbye")
+
+-- apply first parser, then second on remainder of input,
+-- then combine result with the combining fn (a -> b -> c)
+pThen :: (a -> b -> c) -> Parser a -> Parser b -> Parser c
+pThen combine p1 p2 toks =
+  [ (combine v1 v2, toks2) | (v1, toks1) <- p1 toks
+                           , (v2, toks2) <- p2 toks1 ]
+
+-- more capabilities for pthen
+pThen3 :: (a -> b -> c -> d) -> Parser a -> Parser b -> Parser c -> Parser d
+pThen3 combine p1 p2 p3 toks =
+  [ (combine v1 v2 v3, toks3) | (v1, toks1) <- p1 toks
+                              , (v2, toks2) <- p2 toks1
+                              , (v3, toks3) <- p3 toks2 ]
+
+pThen4 :: (a -> b -> c -> d -> e)
+       -> Parser a
+       -> Parser b
+       -> Parser c
+       -> Parser d
+       -> Parser e
+pThen4 combine p1 p2 p3 p4 toks =
+  [ (combine v1 v2 v3 v4, toks4) | (v1, toks1) <- p1 toks
+                                 , (v2, toks2) <- p2 toks1
+                                 , (v3, toks3) <- p3 toks2
+                                 , (v4, toks4) <- p4 toks3 ]
+
+-- example, matches on hello or goodbye + a string (like james)
+pGreeting :: Parser (String, String)
+pGreeting = pThen mkPair pHelloOrGoodbye pVar
+  where
+    mkPair hg name = (hg, name)
+
+-- example, throws out the "!" with pThen3
+pGreeting' :: Parser (String, String)
+pGreeting' = pThen3 mkGreeting pHelloOrGoodbye pVar (pLit "!")
+  where
+    mkGreeting hg name exclamation = (hg, name)
+
+-- recognize zero or more of a parser
+pZeroOrMore :: Parser a -> Parser [a]
+pZeroOrMore p = (pOneOrMore p) `pAlt` (pEmpty [])
+
+pEmpty :: a -> Parser a
+pEmpty p toks = [(p, toks)]
+
+pOneOrMore :: Parser a -> Parser [a]
+pOneOrMore p =
+  pThen (:) p (pZeroOrMore p)
+
+-- run a function over the values returned by a parser
+pApply :: Parser a -> (a -> b) -> Parser b
+pApply p f toks =
+  [ (f(n), toks') | (n, toks') <- p toks ]
+
+-- example of use
+pGreetingsN :: Parser Int
+pGreetingsN = (pZeroOrMore pGreeting) `pApply` length
+
+-- second parser represents the separator, not returned
+-- TODO: this might need to be fixed to understand "a,b,c" and include the c
+pOneOrMoreWithSep :: Parser a -> Parser b -> Parser [a]
+pOneOrMoreWithSep p pSep =
+  pOneOrMore $ (pThen combine p pSep)
+  where
+    combine v1 v2 = v1
+
+-- pSatisfies
+pSat :: (String -> Bool) -> Parser String
+pSat f ((n, tok) : toks) =
+  case f tok of
+    True -> [(tok, toks)]
+    False -> []
+pSat _ _ = []
