@@ -2,6 +2,7 @@
 
 module Parser where
 
+import Language
 import Data.Char (isDigit, isSpace, isAlpha)
 
 -- read -> lex -> parse -> CoreProgram
@@ -25,6 +26,7 @@ twoCharOps = ["==", "~=", ">=", "<=", "->"]
 
 isTwoCharOp :: String -> Bool
 isTwoCharOp s = s `elem` twoCharOps
+
 
 --
 -- lex
@@ -60,8 +62,9 @@ clex n (c:cs) = (n, [c]) : clex n cs
 
 clex n [] = []
 
+
 --
--- parse
+-- parse (library)
 --
 
 type Parser a = [Token] -> [(a, [Token])]
@@ -132,6 +135,7 @@ pZeroOrMore p = (pOneOrMore p) `pAlt` (pEmpty [])
 pEmpty :: a -> Parser a
 pEmpty p toks = [(p, toks)]
 
+-- this could be made more efficient by finishing after the first result is found
 pOneOrMore :: Parser a -> Parser [a]
 pOneOrMore p =
   pThen (:) p (pZeroOrMore p)
@@ -160,3 +164,38 @@ pSat f ((n, tok) : toks) =
     True -> [(tok, toks)]
     False -> []
 pSat _ _ = []
+
+pAexpr :: Parser CoreExpr
+pAexpr = pApply pVar EVar
+  `pAlt` pApply pNum ENum
+
+mkApChain :: [CoreExpr] -> CoreExpr
+mkApChain (e:es) = foldl EAp e es
+
+-- pExpr :: Parser CoreExpr
+pExpr :: Parser CoreExpr
+pExpr = pApply (pOneOrMore pAexpr) mkApChain
+
+--
+-- parse (core language)
+--
+
+mkSc :: String   -- main (fn name)
+     -> [String] -- a b  (variables)
+     -> String   -- =
+     -> CoreExpr -- expr
+     -> (Name, [Name], CoreExpr)
+mkSc name vars eq expr = (name, vars, expr)
+
+-- pSc :: Parser CoreScDefn
+pSc :: Parser (Name, [Name], CoreExpr)
+pSc = pThen4 mkSc pVar (pZeroOrMore pVar) (pLit "=") pExpr
+
+pProgram :: Parser CoreProgram
+pProgram = pOneOrMoreWithSep pSc (pLit ";")
+
+syntax = takeFirstParse . pProgram
+  where
+    takeFirstParse ((prog, []) : others) = prog
+    takeFirstParse (parse      : others) = takeFirstParse others
+    takeFirstParse other                 = error "Syntax error"
