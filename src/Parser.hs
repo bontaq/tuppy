@@ -3,6 +3,7 @@
 module Parser where
 
 import Language
+import Printer
 import Data.Char (isDigit, isSpace, isAlpha)
 
 -- read -> lex -> parse -> CoreProgram
@@ -168,13 +169,23 @@ pSat _ _ = []
 pAexpr :: Parser CoreExpr
 pAexpr = pApply pVar EVar
   `pAlt` pApply pNum ENum
+  `pAlt` pLet
 
 mkApChain :: [CoreExpr] -> CoreExpr
-mkApChain (e:es) = foldl EAp e es
+mkApChain (e:es) = foldr EAp e es
 
--- pExpr :: Parser CoreExpr
 pExpr :: Parser CoreExpr
 pExpr = pApply (pOneOrMore pAexpr) mkApChain
+
+pIns :: Parser [(String, CoreExpr)]
+pIns = pOneOrMore (pThen3 mkIn pVar (pLit "=") pExpr)
+  where
+    mkIn v _ e = (v, e)
+
+pLet :: Parser CoreExpr
+pLet = pThen4 mkLet (pLit "let") pIns (pLit "in") pExpr
+  where
+    mkLet _ vs _ e = ELet False vs e
 
 --
 -- parse (core language)
@@ -194,6 +205,7 @@ pSc = pThen4 mkSc pVar (pZeroOrMore pVar) (pLit "=") pExpr
 pProgram :: Parser CoreProgram
 pProgram = pOneOrMoreWithSep pSc (pLit ";")
 
+syntax :: [Token] -> CoreProgram
 syntax = takeFirstParse . pProgram
   where
     takeFirstParse ((prog, []) : others) = prog
