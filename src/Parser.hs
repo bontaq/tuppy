@@ -211,3 +211,15 @@ syntax = takeFirstParse . pProgram
     takeFirstParse ((prog, []) : others) = prog
     takeFirstParse (parse      : others) = takeFirstParse others
     takeFirstParse other                 = error "Syntax error"
+
+test1 :: CoreProgram
+test1 =
+  syntax $ clex 0 "a = a ;"
+
+-- test2 :: CoreProgram
+test2 =
+  pprint $ syntax $ clex 0 "main = square (square 3) ;"
+
+-- test3 :: CoreProgram
+test3 =
+  pprint $ syntax $ clex 0 "square x = multiply x x ; main = square (square 3) ;"
