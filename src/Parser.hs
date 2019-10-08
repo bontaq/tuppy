@@ -217,9 +217,10 @@ test1 =
   syntax $ clex 0 "a = a ;"
 
 -- test2 :: CoreProgram
+-- it's reversing the square (square 3) ?
 test2 =
   pprint $ syntax $ clex 0 "main = square (square 3) ;"
 
 -- test3 :: CoreProgram
 test3 =
-  pprint $ syntax $ clex 0 "square x = multiply x x ; main = square (square 3) ;"
+  pprint $ syntax $ clex 0 "square x = multiply x y ; main = square (square 3) ;"
