@@ -131,7 +131,7 @@ pGreeting' = pThen3 mkGreeting pHelloOrGoodbye pVar (pLit "!")
 
 -- recognize zero or more of a parser
 pZeroOrMore :: Parser a -> Parser [a]
-pZeroOrMore p = (pOneOrMore p) `pAlt` (pEmpty [])
+pZeroOrMore p = pOneOrMore p `pAlt` pEmpty []
 
 pEmpty :: a -> Parser a
 pEmpty p toks = [(p, toks)]
@@ -223,6 +223,11 @@ test2 =
 test3 =
   pprint $ syntax $ clex 0 "main = square (square 3) ;"
 
--- test3 :: CoreProgram
 test4 =
-  syntax $ clex 0 "square x = multiply x y ; main = square (square 3) ;"
+  syntax $ clex 0 "main = square (square 3) ;"
+
+-- test3 :: CoreProgram
+test5 =
+  syntax $ clex 0 "square x = multiply x y ; main = square 3 2 ; "
+
+test5txt = "square x = multiply x y ; main = square 3 2"
