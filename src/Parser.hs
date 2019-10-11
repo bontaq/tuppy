@@ -71,7 +71,7 @@ clex n [] = []
 type Parser a = [Token] -> [(a, [Token])]
 
 keywords :: [String]
-keywords = ["let", "letrect", "case", "in", "of", "Pack"]
+keywords = ["let", "letrect", "case", "in", "of", "Pack", "="]
 
 -- parse literal
 pLit :: String -> Parser String
@@ -228,6 +228,6 @@ test4 =
 
 -- test3 :: CoreProgram
 test5 =
-  syntax $ clex 0 "square x = multiply x y ; main = square 3 2 ; "
+  syntax $ clex 0 "square x = multiply x y ; main = square 3 2 ;"
 
 test5txt = "square x = multiply x y ; main = square 3 2"
