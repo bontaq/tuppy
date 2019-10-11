@@ -172,7 +172,7 @@ pAexpr = pApply pVar EVar
   `pAlt` pLet
 
 mkApChain :: [CoreExpr] -> CoreExpr
-mkApChain (e:es) = foldr EAp e es
+mkApChain (e:es) = foldl EAp e es
 
 pExpr :: Parser CoreExpr
 pExpr = pApply (pOneOrMore pAexpr) mkApChain
