@@ -63,7 +63,6 @@ clex n (c:cs) = (n, [c]) : clex n cs
 
 clex n [] = []
 
-
 --
 -- parse (library)
 --
@@ -71,7 +70,7 @@ clex n [] = []
 type Parser a = [Token] -> [(a, [Token])]
 
 keywords :: [String]
-keywords = ["let", "letrect", "case", "in", "of", "Pack", "="]
+keywords = ["let", "letrec", "case", "in", "of", "Pack", "="]
 
 -- parse literal
 pLit :: String -> Parser String
@@ -216,18 +215,21 @@ test1 :: CoreProgram
 test1 =
   syntax $ clex 0 "a = a ;"
 
+test2 :: CoreProgram
 test2 =
   syntax $ clex 0 "square x = multiply x y ;"
 
--- it's reversing the square (square 3) ?
+test3 :: String
 test3 =
   pprint $ syntax $ clex 0 "main = square (square 3) ;"
 
+test4 :: CoreProgram
 test4 =
   syntax $ clex 0 "main = square (square 3) ;"
 
--- test3 :: CoreProgram
+test5 :: CoreProgram
 test5 =
   syntax $ clex 0 "square x = multiply x y ; main = square 3 2 ;"
 
+test5txt :: [Char]
 test5txt = "square x = multiply x y ; main = square 3 2"
