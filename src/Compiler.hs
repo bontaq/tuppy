@@ -12,7 +12,7 @@ intersperse c (x:xs) = x <> c <> (intersperse c xs)
 compileExpr :: Expr Name -> String
 compileExpr (EVar a) = " " <> a <> " "
 compileExpr (EAp exprA exprB) =
-  "return (" <>
+  "(" <>
   (compileExpr exprA) <>
   (compileExpr exprB) <>
   ")"
@@ -24,9 +24,9 @@ compile' (name, vars, expr) =
   "function " <> name
   <> "("
   <> (intersperse "," vars)
-  <> ") {\n" <>
+  <> ") {\n return " <>
   (compileExpr expr)
-  <> "}\n"
+  <> "\n}\n"
 
 compile :: CoreProgram -> String
 compile = concat . fmap compile'

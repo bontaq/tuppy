@@ -233,3 +233,6 @@ test5 =
 
 test5txt :: [Char]
 test5txt = "square x = multiply x y ; main = square 3 2"
+
+test6 =
+  syntax $ clex 0 "lettest x = let a = 1 in a ;"
