@@ -29,11 +29,10 @@ compile' :: ScDefn Name -> String
 compile' (name, [], (EVar v)) =
   "var " <> name <> " = " <> v <> ";\n"
 compile' (name, vars, expr) =
-  "function " <> name
-  <> "("
+  "function " <> name <> "("
   <> (intersperse "," vars)
-  <> ") {\n " <>
-  (compileExpr expr)
+  <> ") {\n "
+  <> (compileExpr expr)
   <> "\n};\n"
 
 compile :: CoreProgram -> String

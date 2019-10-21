@@ -10,9 +10,6 @@ type IsRec = Bool
 type Alter a = (Int, [a], Expr a)
 type CoreAlt = Alter Name
 
--- recursive, nonRecursive :: IsRec
--- recursive    = True
--- nonRecursive = False
 
 data Expr a
   = EVar Name -- Variables
