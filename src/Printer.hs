@@ -5,32 +5,9 @@ module Printer where
 import Data.List (intersperse)
 import Language
 
--- type Name = String
--- type IsRec = Bool
-
--- type Alter a = (Int, [a], Expr a)
--- type CoreAlt = Alter Name
-
 recursive, nonRecursive :: IsRec
 recursive    = True
 nonRecursive = False
-
--- data Expr a
---   = EVar Name -- Variables
---   | ENum Int  -- Numbers
---   | EConstr Int Int -- Constructor tag arity
---   | EAp (Expr a) (Expr a) -- Applications
---   | ELet                  -- Let (rec) expressions
---     IsRec                 -- boolean with True = recursive
---     [(a, Expr a)]         -- definitions
---     (Expr a)              -- body of let(rec)
---   | ECase
---     (Expr a)
---     [Alter a]
---   | ELam [a] (Expr a)
---   deriving (Show)
-
--- type CoreExpr = Expr Name
 
 -- collects the list of variables
 bindersOf :: [(a, b)] -> [a]
@@ -45,13 +22,6 @@ isAtomicExpr :: Expr a -> Bool
 isAtomicExpr (EVar v) = True
 isAtomicExpr (ENum n) = True
 isAtomicExpr _        = False
-
--- supercombinator definition (i.e. main = )
--- type ScDefn a = (Name, [a], Expr a)
--- type CoreScDefn = ScDefn Name
-
--- type Program a = [ScDefn a]
--- type CoreProgram = Program Name
 
 -- defines some combinators for the core languages
 -- mostly just function application
