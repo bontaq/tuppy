@@ -1,6 +1,9 @@
 module TypeChecker where
 
-type TypeVarName = String
+import Language
+
+type TypeVarName = [Integer]
+type VExpr = Expr [Integer]
 data TypeExpression = TypeVar TypeVarName
                     | TypeConstructor String [TypeExpression]
                     deriving (Show, Eq)
@@ -72,3 +75,110 @@ unifyl phi eqns = foldr unify' (Ok phi) eqns
   where
     unify' eqn (Ok phi)    = unify phi eqn
     unify' eqn (Failure _) = Failure ""
+
+
+data TypeScheme = Scheme [TypeVarName] TypeExpression
+
+unknownScheme :: TypeScheme -> [TypeVarName]
+unknownScheme (Scheme scvs t) =
+  let tvars = typeVarsIn t
+  in filter (\x -> not $ x `elem` scvs) tvars
+
+subScheme :: Subst -> TypeScheme -> TypeScheme
+subScheme phi (Scheme scvs t) =
+  Scheme scvs (subType (exclude phi scvs) t)
+  where
+    exclude phi scvs tvn
+      | tvn `elem` scvs = TypeVar tvn
+      | otherwise       = phi tvn
+
+type AssocList a b = [(a, b)]
+
+dom :: AssocList a b -> [a]
+dom al = [ k | (k, v) <- al ]
+
+val :: Eq a => AssocList a b -> a -> b
+val al k = head [ v | (k', v) <- al
+                    , k == k' ]
+
+install :: [(a, b)] -> a -> b -> [(a, b)]
+install al k v = (k, v) : al
+
+mg :: Eq a => AssocList a b -> [b]
+mg al = map (val al) (dom al)
+
+type TypeEnv = AssocList TypeVarName TypeScheme
+
+unknownTypeEnv :: TypeEnv -> [TypeVarName]
+unknownTypeEnv gamma = appendList (map unknownScheme (mg gamma))
+  where
+    appendList = foldr (++) []
+
+subTypeEnv :: Subst -> TypeEnv -> TypeEnv
+subTypeEnv phi gamma =
+  [ (x, subScheme phi st) | (x, st) <- gamma ]
+
+type NameSupply = TypeVarName
+
+nextName ns = ns
+
+deplete (n:ns) = (n + 2 : ns)
+
+split ns = (0:ns, 1:ns)
+
+nameSequence :: NameSupply -> [TypeVarName]
+nameSequence ns = nextName ns : nameSequence (deplete ns)
+
+typeCheck ::
+  TypeEnv ->
+  NameSupply ->
+  VExpr ->
+  Reply (Subst, TypeExpression) String
+typeCheck gamma ns (EVar x) = typeCheckVar gamma ns x
+
+typeCheckList ::
+  TypeEnv
+  -> NameSupply
+  -> [VExpr]
+  -> Reply (Subst, [TypeExpression]) String
+typeCheckList gamma ns [] = Ok (idSubstitution, [])
+typeCheckList gamma ns (e:es) =
+  typeCheckList1 gamma ns0 es (typeCheck gamma ns1 e)
+  where
+    (ns0, ns1) = split ns
+
+typeCheckList1 ::
+  [(TypeVarName, TypeScheme)]
+  -> NameSupply
+  -> [VExpr]
+  -> Reply (Subst, TypeExpression) String
+  -> Reply (Subst, [TypeExpression]) String
+typeCheckList1 gamma ns es (Failure s) = Failure s
+typeCheckList1 gamma ns es (Ok (phi, t)) =
+  typeCheckList2 phi t (typeCheckList gamma' ns es)
+  where
+    gamma' = subTypeEnv phi gamma
+
+typeCheckList2 ::
+  Subst
+  -> TypeExpression
+  -> Reply (Subst, [TypeExpression]) b
+  -> Reply (Subst, [TypeExpression]) b
+typeCheckList2 phi t (Failure s) = Failure s
+typeCheckList2 phi t (Ok (psi, ts)) =
+  Ok (psi `scompose` phi, (subType psi t) : ts)
+
+typeCheckVar gamma ns x =
+  Ok (idSubstitution, newInstance ns scheme)
+  where
+    scheme = val gamma x
+    newInstance ns (Scheme scvs t) =
+      let al = scvs `zip` (nameSequence ns)
+          phi = alToSubst al
+      in subType phi t
+
+alToSubst ::
+  AssocList [Integer] TypeVarName -> [Integer] -> TypeExpression
+alToSubst al tvn
+  | tvn `elem` (dom al) = TypeVar (val al tvn)
+  | otherwise           = TypeVar tvn
