@@ -1,9 +1,10 @@
 module TypeChecker where
 
 import Language
+import Parser
 
-type TypeVarName = [Integer]
-type VExpr = Expr [Integer]
+type TypeVarName = String
+type VExpr = CoreExpr
 data TypeExpression = TypeVar TypeVarName
                     | TypeConstructor String [TypeExpression]
                     deriving (Show, Eq)
@@ -122,9 +123,10 @@ type NameSupply = TypeVarName
 
 nextName ns = ns
 
-deplete (n:ns) = (n + 2 : ns)
+deplete :: [Char] -> [Char]
+deplete (n:ns) = (n:n: ns)
 
-split ns = (0:ns, 1:ns)
+split ns = ('a':ns, 'b':ns)
 
 nameSequence :: NameSupply -> [TypeVarName]
 nameSequence ns = nextName ns : nameSequence (deplete ns)
@@ -135,6 +137,26 @@ typeCheck ::
   VExpr ->
   Reply (Subst, TypeExpression) String
 typeCheck gamma ns (EVar x) = typeCheckVar gamma ns x
+typeCheck gamma ns (EAp e1 e2) = typeCheckAp gamma ns e1 e2
+typeCheck gamma ns (ELam x e) = typeCheckLam gamma ns x e
+typeCheck gamma ns (ELet isRec xs es) = typeCheckLet gamma ns xs es
+typeCheck _ _ e = error $ show e
+
+typeCheckAp gamma ns e1 e2 =
+  typeCheckAp1 tvn (typeCheckList gamma ns' [e1, e2])
+  where
+    tvn = nextName ns
+    ns' = deplete ns
+typeCheckAp1 tvn (Failure s) =
+  Failure "Nonesense"
+typeCheckAp1 tvn (Ok (phi, [t1, t2])) =
+  typeCheckAp2 tvn (unify phi (t1, t2 `arrow` (TypeVar tvn)))
+typeCheckAp2 tvn (Failure s) =
+  Failure s
+typeCheckAp2 tvn (Ok phi) = Ok (phi, phi tvn)
+
+typeCheckLam = undefined
+typeCheckLet = undefined
 
 typeCheckList ::
   TypeEnv
@@ -168,6 +190,9 @@ typeCheckList2 phi t (Failure s) = Failure s
 typeCheckList2 phi t (Ok (psi, ts)) =
   Ok (psi `scompose` phi, (subType psi t) : ts)
 
+typeCheckVar ::
+  Eq a =>
+  [(a, TypeScheme)] -> [Char] -> a -> Reply (Subst, TypeExpression) b
 typeCheckVar gamma ns x =
   Ok (idSubstitution, newInstance ns scheme)
   where
@@ -177,8 +202,6 @@ typeCheckVar gamma ns x =
           phi = alToSubst al
       in subType phi t
 
-alToSubst ::
-  AssocList [Integer] TypeVarName -> [Integer] -> TypeExpression
 alToSubst al tvn
   | tvn `elem` (dom al) = TypeVar (val al tvn)
   | otherwise           = TypeVar tvn
