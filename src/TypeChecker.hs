@@ -9,6 +9,19 @@ data TypeExpression = TypeVar TypeVarName
                     | TypeConstructor String [TypeExpression]
                     deriving (Show, Eq)
 
+-- | What does it mean to have solved the types?
+--
+-- Imagine it like these simultaneous equations:
+-- a * x1 + b * x2 = b1
+-- c * x1 + d * x2 = b2
+-- x1 and x2 are unknown, so the goal of of this
+-- type checker with inference is to solve x1 and x2
+--
+-- the "unknowns" are represented by substitutions,
+-- and we're saying "if we apply these subtitutions,
+-- the equations will be solved"
+
+
 -- represent a transformation from t1 to t2
 arrow :: TypeExpression -> TypeExpression -> TypeExpression
 arrow t1 t2 = TypeConstructor "arrow" [t1, t2]
@@ -38,9 +51,15 @@ subType :: Subst -> TypeExpression -> TypeExpression
 subType phi (TypeVar tvn) = phi tvn
 subType phi (TypeConstructor tcn ts) = TypeConstructor tcn (map (subType phi) ts)
 
+-- | Creates a subst off a name
+-- >>> idSubstitution "a"
+-- TypeVar "a"
 idSubstitution :: Subst
 idSubstitution tvn = TypeVar tvn
 
+-- | Substitution focused on a single variable
+-- >>> delta "a" (TypeVar "a")
+-- 1
 delta :: TypeVarName -> TypeExpression -> Subst
 delta tvn t tvn'
   | tvn == tvn' = t
@@ -56,6 +75,15 @@ extend phi tvn t
   | otherwise =
       Ok ((delta tvn t) `scompose` phi)
 
+-- | Unification
+--
+-- A system of type equations can be represented by a list of pairs
+-- of type [(TypeExpression, TypeExpression)], with each pair
+-- representing an equation of t1 == t2.
+--
+-- To unify the equations, we want to find the phi (substitution) of
+-- subType phi t1 == subType phi t2
+--
 unify :: Subst -> (TypeExpression, TypeExpression) -> Reply Subst String
 unify phi ((TypeVar tvn), t)
   | phitvn == TypeVar tvn = extend phi tvn phit
@@ -75,7 +103,7 @@ unifyl :: Subst -> [(TypeExpression, TypeExpression)] -> Reply Subst String
 unifyl phi eqns = foldr unify' (Ok phi) eqns
   where
     unify' eqn (Ok phi)    = unify phi eqn
-    unify' eqn (Failure _) = Failure ""
+    unify' eqn (Failure _) = Failure "Could not unify"
 
 
 data TypeScheme = Scheme [TypeVarName] TypeExpression
@@ -99,8 +127,12 @@ dom :: AssocList a b -> [a]
 dom al = [ k | (k, v) <- al ]
 
 val :: Eq a => AssocList a b -> a -> b
-val al k = head [ v | (k', v) <- al
-                    , k == k' ]
+val al k =
+  let val = [ v | (k', v) <- al
+                , k == k' ]
+  in case length val of
+    0 -> error "nope"
+    _ -> head val
 
 install :: [(a, b)] -> a -> b -> [(a, b)]
 install al k v = (k, v) : al
@@ -124,7 +156,7 @@ type NameSupply = TypeVarName
 nextName ns = ns
 
 deplete :: [Char] -> [Char]
-deplete (n:ns) = (n:n: ns)
+deplete (n:ns) = (n:n:ns)
 
 split ns = ('a':ns, 'b':ns)
 
@@ -205,3 +237,16 @@ typeCheckVar gamma ns x =
 alToSubst al tvn
   | tvn `elem` (dom al) = TypeVar (val al tvn)
   | otherwise           = TypeVar tvn
+
+test1 :: Reply (Subst, [TypeExpression]) String
+test1 =
+  let
+    translate (name, vars, expr) = expr
+    translatedCore = map translate
+  in
+    typeCheckList [] "" $ translatedCore $ syntax $ clex 0 "main = square 3 ;"
+
+runTest test =
+  case test of
+    (Ok a) -> "Ok!"
+    (Failure x) -> "Failed!"
