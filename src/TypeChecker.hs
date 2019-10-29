@@ -172,6 +172,7 @@ typeCheck ::
   VExpr ->
   Reply (Subst, TypeExpression) String
 typeCheck gamma ns (EVar x) = typeCheckVar gamma ns x
+typeCheck gamma ns (ENum x) = typeCheckNum gamma ns x
 typeCheck gamma ns (EAp e1 e2) = typeCheckAp gamma ns e1 e2
 typeCheck gamma ns (ELam x e) = typeCheckLam gamma ns x e
 typeCheck gamma ns (ELet isRec xs es) = typeCheckLet gamma ns xs es
@@ -236,6 +237,12 @@ typeCheckVar gamma ns x =
       let al = scvs `zip` (nameSequence ns)
           phi = alToSubst al
       in subType phi t
+
+typeCheckNum ::
+  (Show a, Show b, Eq a) =>
+  [(a, TypeScheme)] -> [Char] -> Int -> Reply (Subst, TypeExpression) b
+typeCheckNum gamma ns x =
+  Ok (idSubstitution, int)
 
 alToSubst al tvn
   | tvn `elem` (dom al) = TypeVar (val al tvn)
