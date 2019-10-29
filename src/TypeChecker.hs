@@ -2,6 +2,7 @@ module TypeChecker where
 
 import Language
 import Parser
+import Debug.Trace
 
 type TypeVarName = String
 type VExpr = CoreExpr
@@ -107,6 +108,7 @@ unifyl phi eqns = foldr unify' (Ok phi) eqns
 
 
 data TypeScheme = Scheme [TypeVarName] TypeExpression
+                  deriving Show
 
 unknownScheme :: TypeScheme -> [TypeVarName]
 unknownScheme (Scheme scvs t) =
@@ -126,7 +128,8 @@ type AssocList a b = [(a, b)]
 dom :: AssocList a b -> [a]
 dom al = [ k | (k, v) <- al ]
 
-val :: Eq a => AssocList a b -> a -> b
+val :: (Show a, Show b, Eq a) => AssocList a b -> a -> b
+val al k | trace ("Val " <> show al <> " Key " <> show k) False = undefined
 val al k =
   let val = [ v | (k', v) <- al
                 , k == k' ]
@@ -137,7 +140,7 @@ val al k =
 install :: [(a, b)] -> a -> b -> [(a, b)]
 install al k v = (k, v) : al
 
-mg :: Eq a => AssocList a b -> [b]
+mg :: (Show a, Show b, Eq a) => AssocList a b -> [b]
 mg al = map (val al) (dom al)
 
 type TypeEnv = AssocList TypeVarName TypeScheme
@@ -223,7 +226,7 @@ typeCheckList2 phi t (Ok (psi, ts)) =
   Ok (psi `scompose` phi, (subType psi t) : ts)
 
 typeCheckVar ::
-  Eq a =>
+  (Show a, Show b, Eq a) =>
   [(a, TypeScheme)] -> [Char] -> a -> Reply (Subst, TypeExpression) b
 typeCheckVar gamma ns x =
   Ok (idSubstitution, newInstance ns scheme)
@@ -243,8 +246,9 @@ test1 =
   let
     translate (name, vars, expr) = expr
     translatedCore = map translate
+    typeEnv = [("square", Scheme ["square"] (arrow int int))]
   in
-    typeCheckList [] "" $ translatedCore $ syntax $ clex 0 "main = square 3 ;"
+    typeCheckList typeEnv "" $ translatedCore $ syntax $ clex 0 "main = square 3 ;"
 
 runTest test =
   case test of
