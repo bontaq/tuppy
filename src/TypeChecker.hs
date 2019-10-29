@@ -253,9 +253,19 @@ test1 =
   let
     translate (name, vars, expr) = expr
     translatedCore = map translate
-    typeEnv = [("square", Scheme ["square"] (arrow int int))]
+    typeEnv = [("square", Scheme [] (arrow (TypeVar "string") int))]
   in
     typeCheckList typeEnv "" $ translatedCore $ syntax $ clex 0 "main = square 3 ;"
+
+-- test2 :: Reply (Subst, [TypeExpression]) String
+test2 =
+  let
+    translate (name, vars, expr) = expr
+    translatedCore = map translate
+    typeEnv = [ -- ("square", Scheme [] (arrow int int))
+               ("*", Scheme [] (arrow int int))]
+  in
+    typeCheckList typeEnv "" $ translatedCore $ syntax $ clex 0 "square x = * x x ;"
 
 runTest test =
   case test of
