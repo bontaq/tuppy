@@ -166,8 +166,9 @@ pSat f ((n, tok) : toks) =
 pSat _ _ = []
 
 pAexpr :: Parser CoreExpr
-pAexpr = pApply pVar EVar
-  `pAlt` pApply pNum ENum
+pAexpr =
+  pApply pNum ENum
+  `pAlt` pApply pVar EVar
   `pAlt` pLet
 
 mkApChain :: [CoreExpr] -> CoreExpr
