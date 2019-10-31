@@ -1,4 +1,4 @@
-module ParserSpec where
+module TypeCheckerSpec where
 
 import Test.Hspec
 
