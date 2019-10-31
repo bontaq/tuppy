@@ -244,9 +244,12 @@ nameToNumber =
   in
     map (\x -> fromJust $ lookup x numLookup)
 
+-- typeCheckVar ::
+--   (Show a, Show b, Eq a) =>
+--   [(a, TypeScheme)] -> [Int] -> Name -> Reply (Subst, TypeExpression) b
 typeCheckVar ::
-  (Show a, Show b, Eq a) =>
-  [(a, TypeScheme)] -> [Int] -> Name -> Reply (Subst, TypeExpression) b
+  [([Int], TypeScheme)]
+  -> [Int] -> [Char] -> Reply (Subst, TypeExpression) b
 typeCheckVar gamma ns x =
   Ok (idSubstitution, newInstance ns scheme)
   where
@@ -271,11 +274,11 @@ test2 =
     translate (name, vars, expr) = expr
     translatedCore = map translate
     typeEnv = [ -- ("square", Scheme [] (arrow int int))
-               ([1], Scheme [] int)
-               , ([2], Scheme [] (arrow int int))]
+               (nameToNumber "x", Scheme [] int)
+               , (nameToNumber "a", Scheme [] (arrow int int))]
   in
     -- EAp (EAp (EVar "*") (EVar "x")) (EVar "x")
-    typeCheckList typeEnv [0..] $ translatedCore $ syntax $ clex 0 "square = * x x ;"
+    typeCheckList typeEnv [0..100] $ translatedCore $ syntax $ clex 0 "square = a x x ;"
 
 -- test3 :: Reply (Subst, TypeExpression) String
 -- test3 =
