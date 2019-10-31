@@ -30,6 +30,9 @@ arrow t1 t2 = TypeConstructor "arrow" [t1, t2]
 int :: TypeExpression
 int = TypeConstructor "int" []
 
+string :: TypeExpression
+string = TypeConstructor "string" []
+
 cross :: TypeExpression -> TypeExpression -> TypeExpression
 cross t1 t2 = TypeConstructor "cross" [t1, t2]
 
@@ -159,8 +162,11 @@ type NameSupply = TypeVarName
 nextName ns = ns
 
 deplete :: [Char] -> [Char]
-deplete (n:ns) = (n:n:ns)
+deplete (n:ns) =
+  let (_:next:_) = dropWhile (\x -> x /= n) ['a'..'z']
+  in (next:ns)
 
+split :: [Char] -> ([Char], [Char])
 split ns = ('a':ns, 'b':ns)
 
 nameSequence :: NameSupply -> [TypeVarName]
@@ -249,14 +255,14 @@ alToSubst al tvn
   | tvn `elem` (dom al) = TypeVar (val al tvn)
   | otherwise           = TypeVar tvn
 
-test1 :: Reply (Subst, [TypeExpression]) String
+test1 :: Reply (Subst, TypeExpression) String
 test1 =
   let
     translate (name, vars, expr) = expr
-    translatedCore = map translate
-    typeEnv = [("square", Scheme [] (arrow (TypeVar "x") (TypeVar "y")))]
+    translatedCore = head . map translate
+    typeEnv = [("square", Scheme [] (arrow int int))]
   in
-    typeCheckList typeEnv "" $ translatedCore $ syntax $ clex 0 "main = square 3 ;"
+    typeCheck typeEnv "abcdef" $ translatedCore $ syntax $ clex 0 "main = square 3 ;"
 
 -- test2 :: Reply (Subst, [TypeExpression]) String
 test2 =
