@@ -255,14 +255,14 @@ alToSubst al tvn
   | tvn `elem` (dom al) = TypeVar (val al tvn)
   | otherwise           = TypeVar tvn
 
-test1 :: Reply (Subst, TypeExpression) String
-test1 =
-  let
-    translate (name, vars, expr) = expr
-    translatedCore = head . map translate
-    typeEnv = [("square", Scheme [] (arrow int int))]
-  in
-    typeCheck typeEnv "abcdef" $ translatedCore $ syntax $ clex 0 "main = square 3 ;"
+-- test1 :: Reply (Subst, TypeExpression) String
+-- test1 =
+--   let
+--     translate (name, vars, expr) = expr
+--     translatedCore = head . map translate
+--     typeEnv = [("square", Scheme [] (arrow int int))]
+--   in
+--     typeCheck typeEnv "abcdef" $ translatedCore $ syntax $ clex 0 "main = square 3 ;"
 
 -- test2 :: Reply (Subst, [TypeExpression]) String
 test2 =
