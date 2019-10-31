@@ -171,6 +171,7 @@ typeCheck ::
   NameSupply ->
   VExpr ->
   Reply (Subst, TypeExpression) String
+typeCheck gamma ns x | trace ("Gamma " <> show gamma <> " NS " <> show ns <> " X " <> show x <> "\n") False = undefined
 typeCheck gamma ns (EVar x) = typeCheckVar gamma ns x
 typeCheck gamma ns (ENum x) = typeCheckNum gamma ns x
 typeCheck gamma ns (EAp e1 e2) = typeCheckAp gamma ns e1 e2
@@ -242,7 +243,7 @@ typeCheckNum ::
   (Show a, Show b, Eq a) =>
   [(a, TypeScheme)] -> [Char] -> Int -> Reply (Subst, TypeExpression) b
 typeCheckNum gamma ns x =
-  Ok (idSubstitution, int)
+  Ok (\_ -> int, int)
 
 alToSubst al tvn
   | tvn `elem` (dom al) = TypeVar (val al tvn)
@@ -253,7 +254,7 @@ test1 =
   let
     translate (name, vars, expr) = expr
     translatedCore = map translate
-    typeEnv = [("square", Scheme [] (arrow (TypeVar "string") int))]
+    typeEnv = [("square", Scheme [] (arrow (TypeVar "x") (TypeVar "y")))]
   in
     typeCheckList typeEnv "" $ translatedCore $ syntax $ clex 0 "main = square 3 ;"
 
@@ -263,11 +264,12 @@ test2 =
     translate (name, vars, expr) = expr
     translatedCore = map translate
     typeEnv = [ -- ("square", Scheme [] (arrow int int))
+               -- ("x", Scheme ["x"] int)
                ("*", Scheme [] (arrow int int))]
   in
     typeCheckList typeEnv "" $ translatedCore $ syntax $ clex 0 "square x = * x x ;"
 
 runTest test =
   case test of
-    (Ok a) -> "Ok!"
+    (Ok (_, t)) -> "Ok! " <> show t
     (Failure x) -> "Failed!"
