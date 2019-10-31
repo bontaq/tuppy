@@ -4,7 +4,7 @@ import Language
 import Parser
 import Debug.Trace
 
-type TypeVarName = String
+type TypeVarName = [Int]
 type VExpr = CoreExpr
 data TypeExpression = TypeVar TypeVarName
                     | TypeConstructor String [TypeExpression]
@@ -161,13 +161,15 @@ type NameSupply = TypeVarName
 
 nextName ns = ns
 
-deplete :: [Char] -> [Char]
-deplete (n:ns) =
-  let (_:next:_) = dropWhile (\x -> x /= n) ['a'..'z']
-  in (next:ns)
+deplete :: [Int] -> [Int]
+deplete (n:ns) = (n+2:ns)
+  -- let (_:next:_) = dropWhile (\x -> x /= n) ['a'..'z']
+  -- in (next:ns)
 
-split :: [Char] -> ([Char], [Char])
-split ns = ('a':ns, 'b':ns)
+-- split :: [Char] -> ([Char], [Char])
+-- split :: Num a => [a] -> ([a], [a])
+split :: [Int] -> ([Int], [Int])
+split ns = (0:ns, 1:ns)
 
 nameSequence :: NameSupply -> [TypeVarName]
 nameSequence ns = nextName ns : nameSequence (deplete ns)
@@ -233,13 +235,22 @@ typeCheckList2 phi t (Failure s) = Failure s
 typeCheckList2 phi t (Ok (psi, ts)) =
   Ok (psi `scompose` phi, (subType psi t) : ts)
 
+fromJust (Just a) = a
+fromJust _ = error "could not find"
+
+nameToNumber :: [Char] -> [Int]
+nameToNumber =
+  let numLookup = zip ['a'..'z'] [0..]
+  in
+    map (\x -> fromJust $ lookup x numLookup)
+
 typeCheckVar ::
   (Show a, Show b, Eq a) =>
-  [(a, TypeScheme)] -> [Char] -> a -> Reply (Subst, TypeExpression) b
+  [(a, TypeScheme)] -> [Int] -> Name -> Reply (Subst, TypeExpression) b
 typeCheckVar gamma ns x =
   Ok (idSubstitution, newInstance ns scheme)
   where
-    scheme = val gamma x
+    scheme = val gamma (nameToNumber x)
     newInstance ns (Scheme scvs t) =
       let al = scvs `zip` (nameSequence ns)
           phi = alToSubst al
@@ -247,7 +258,7 @@ typeCheckVar gamma ns x =
 
 typeCheckNum ::
   (Show a, Show b, Eq a) =>
-  [(a, TypeScheme)] -> [Char] -> Int -> Reply (Subst, TypeExpression) b
+  [(a, TypeScheme)] -> [Int] -> Int -> Reply (Subst, TypeExpression) b
 typeCheckNum gamma ns x =
   Ok (\_ -> int, int)
 
@@ -255,8 +266,19 @@ alToSubst al tvn
   | tvn `elem` (dom al) = TypeVar (val al tvn)
   | otherwise           = TypeVar tvn
 
--- test1 :: Reply (Subst, TypeExpression) String
--- test1 =
+test2 =
+  let
+    translate (name, vars, expr) = expr
+    translatedCore = map translate
+    typeEnv = [ -- ("square", Scheme [] (arrow int int))
+               ([1], Scheme [] int)
+               , ([2], Scheme [] (arrow int int))]
+  in
+    -- EAp (EAp (EVar "*") (EVar "x")) (EVar "x")
+    typeCheckList typeEnv [0..] $ translatedCore $ syntax $ clex 0 "square = * x x ;"
+
+-- test3 :: Reply (Subst, TypeExpression) String
+-- test3 =
 --   let
 --     translate (name, vars, expr) = expr
 --     translatedCore = head . map translate
@@ -264,27 +286,7 @@ alToSubst al tvn
 --   in
 --     typeCheck typeEnv "abcdef" $ translatedCore $ syntax $ clex 0 "main = square 3 ;"
 
--- test2 :: Reply (Subst, [TypeExpression]) String
-test2 =
-  let
-    translate (name, vars, expr) = expr
-    translatedCore = map translate
-    typeEnv = [ -- ("square", Scheme [] (arrow int int))
-               -- ("x", Scheme ["x"] int)
-               ("*", Scheme [] (arrow int int))]
-  in
-    typeCheckList typeEnv "" $ translatedCore $ syntax $ clex 0 "square x = * x x ;"
-
-test3 :: Reply (Subst, TypeExpression) String
-test3 =
-  let
-    translate (name, vars, expr) = expr
-    translatedCore = head . map translate
-    typeEnv = [("square", Scheme [] (arrow int int))]
-  in
-    typeCheck typeEnv "abcdef" $ translatedCore $ syntax $ clex 0 "main = square 3 ;"
-
 runTest test =
   case test of
     (Ok (_, t)) -> "Ok! " <> show t
-    (Failure x) -> "Failed!"
+    (Failure x) -> "Failed! " <> show x

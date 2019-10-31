@@ -9,7 +9,6 @@ import Parser
 main :: IO ()
 main = hspec spec
 
--- test1 :: Reply (Subst, TypeExpression) String
 test1 =
   let
     translate (name, vars, expr) = expr
