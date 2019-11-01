@@ -273,16 +273,7 @@ test2 =
   in
     typeCheckList typeEnv [0] $ translatedCore $ syntax $ clex 0 "square = multiply x x ;"
 
--- test3 :: Reply (Subst, TypeExpression) String
--- test3 =
---   let
---     translate (name, vars, expr) = expr
---     translatedCore = head . map translate
---     typeEnv = [("square", Scheme [] (arrow int int))]
---   in
---     typeCheck typeEnv "abcdef" $ translatedCore $ syntax $ clex 0 "main = square 3 ;"
-
-runTest test =
+runTest' test =
   case test of
     (Ok (_, t)) -> "Ok! " <> show t
     (Failure x) -> "Failed! " <> show x
