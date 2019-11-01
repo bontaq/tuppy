@@ -1,0 +1,17 @@
+* Looking into Agda's alternative to type classes
+
+* Example
+  - Note taken on [2019-10-31 Thu 23:17] \\
+    #+BEGIN_SRC agda
+    record Eq (t : Set) : Set where
+      field equal : t -> t -> Bool
+
+    eqBool : Eq Bool
+    eqBool = record { equal = primEqBool }
+
+    eqNat : Eq Integer
+    eqNat = record { equal = primEqNat }
+
+    equal : { t : Set } -> {{ eqT : Eq t }} -> t -> t -> Bool
+    equal {{ eqT }} = Eq.equal eqT
+    #+END_SRC
