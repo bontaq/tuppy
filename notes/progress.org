@@ -1,3 +1,13 @@
 * Type Classes
-** Frontend -> Core (where typeclasses would be handled) -> Typechecker?
-** Or would it be Frontend -> TypeChecker -> Compiler handles the classes?
+  - Note taken on [2019-11-01 Fri 02:49] \\
+    Frontend -> Core (where typeclasses would be handled) -> Typechecker?
+    Or would it be Frontend -> TypeChecker -> Compiler handles the classes?
+
+* Displaying Errors
+  - Note taken on [2019-11-01 Fri 02:49] \\
+    Since the typechecker has access to the full tree at the top level,
+    it should be straightforward to pass up errors and annotate them?
+
+    I'm not sure how I could relate that to a line and position number,
+    though.  The only way might be extending the frontend language
+    definition.
