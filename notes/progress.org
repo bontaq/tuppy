@@ -1,0 +1,3 @@
+* Type Classes
+** Frontend -> Core (where typeclasses would be handled) -> Typechecker?
+** Or would it be Frontend -> TypeChecker -> Compiler handles the classes?

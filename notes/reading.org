@@ -1,1 +1,5 @@
-https://core.ac.uk/download/pdf/82197591.pdf
+* About typeclasses
+** https://www.cs.tufts.edu/comp/150PLD/Notes/TypeClasses.pdf
+
+* About row types
+** https://core.ac.uk/download/pdf/82197591.pdf
