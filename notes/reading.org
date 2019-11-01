@@ -1,5 +1,13 @@
-* About typeclasses
-** https://www.cs.tufts.edu/comp/150PLD/Notes/TypeClasses.pdf
+* The implementation of functional programming languages (1987)
+** Typechecker entirely taken from this, see p. 139 to p. 182
+** https://www.microsoft.com/en-us/research/uploads/prod/1987/01/slpj-book-1987-r90.pdf
 
-* About row types
+* Implementing functional languages: a tutorial (1992)
+** Parser, lexer, printer, core language taken from this (everything up to p. 83)
+** https://www.microsoft.com/en-us/research/wp-content/uploads/1992/01/student.pdf
+
+* About row types (1991)
 ** https://core.ac.uk/download/pdf/82197591.pdf
+
+* About typeclasses (unknown)
+** https://www.cs.tufts.edu/comp/150PLD/Notes/TypeClasses.pdf
