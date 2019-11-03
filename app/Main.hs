@@ -45,6 +45,7 @@ handleCompile f =
 replaceEnding :: [Char] -> [Char]
 replaceEnding (".tp") = ".js"
 replaceEnding (x:xs) = [x] <> replaceEnding xs
+replaceEnding _ = error "Filename did not end in .tp"
 
 run :: Args -> IO ()
 run (Args compile file) = do
