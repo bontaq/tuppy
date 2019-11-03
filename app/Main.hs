@@ -1,7 +1,11 @@
 module Main where
 
 import Lib
-import Options.Applicative
+import Parser (clex, syntax)
+import TypeChecker
+import Compiler
+
+import Options.Applicative hiding (Failure)
 
 data Args = Args
             { compile :: Bool
@@ -29,5 +33,18 @@ main = run =<< execParser opts
         <> progDesc "Compile a program"
         <> header "hello" )
 
+handleCompile :: String -> String
+handleCompile f =
+  let syntax' = syntax . (clex 0) $ f
+      tcResult = typeCheckCore syntax'
+  in
+    case tcResult of
+      (Ok (_, _)) -> Compiler.compile syntax'
+      (Failure x) -> x
+
 run :: Args -> IO ()
-run (Args compile file) = putStrLn $ (show compile) <> " " <> (show file)
+run (Args compile file) = do
+  f <- readFile file
+  let js = handleCompile f
+  writeFile "out.js" js
+  putStrLn "Ok!"

@@ -25,6 +25,8 @@ compileExpr (ELet recursive vars expr) =
     handleVars = concat . map handleVar
     handleVar (name, expr) = "var " <> name <> " =" <> compileExpr expr <> ";"
 
+compileExpr (ENum n) = show n
+
 compile' :: ScDefn Name -> String
 compile' (name, [], (EVar v)) =
   "var " <> name <> " = " <> v <> ";\n"
