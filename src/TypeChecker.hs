@@ -279,7 +279,9 @@ typeCheckCore c =
     translate (name, vars, expr) = expr
     translatedCore = map translate
     typeEnv :: [([Int], TypeScheme)]
-    typeEnv = [(nameToNumber "square", Scheme [] (arrow int int))]
+    typeEnv =
+      [ (nameToNumber "square", Scheme [] (arrow int int))
+      , (nameToNumber "multiply", Scheme [] (arrow int (arrow int int))) ]
   in
     typeCheckList typeEnv [0] $ translatedCore c
 

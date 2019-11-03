@@ -12,7 +12,7 @@ compileExpr :: Expr Name -> String
 -- EAp (EAp (EVar "multiply") (EVar "x")) (EVar "y"))
 compileExpr (EVar a) = a <> " "
 compileExpr (EAp exprA exprB) =
-  "return ("
+  "("
   <> (compileExpr exprA)
   <> "("
   <> (compileExpr exprB)
@@ -35,7 +35,7 @@ compile' (name, vars, expr) =
   "function " <> name <> "("
   <> (intersperse "," vars)
   <> ") {\n "
-  <> (compileExpr expr)
+  <> "return " <> (compileExpr expr)
   <> "\n};\n"
 
 compile :: CoreProgram -> String
