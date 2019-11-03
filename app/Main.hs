@@ -42,9 +42,15 @@ handleCompile f =
       (Ok (_, _)) -> Compiler.compile syntax'
       (Failure x) -> x
 
+replaceEnding :: [Char] -> [Char]
+replaceEnding (".tp") = ".js"
+replaceEnding (x:xs) = [x] <> replaceEnding xs
+
 run :: Args -> IO ()
 run (Args compile file) = do
   f <- readFile file
   let js = handleCompile f
-  writeFile "out.js" js
+      newFile = replaceEnding file
+  putStrLn newFile
+  writeFile newFile js
   putStrLn "Ok!"
