@@ -1,3 +1,3 @@
 function main() {
- ( square 1)
+ return (square (1))
 };

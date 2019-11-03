@@ -10,12 +10,13 @@ intersperse c (x:xs) = x <> c <> (intersperse c xs)
 
 compileExpr :: Expr Name -> String
 -- EAp (EAp (EVar "multiply") (EVar "x")) (EVar "y"))
-compileExpr (EVar a) = " " <> a <> " "
+compileExpr (EVar a) = a <> " "
 compileExpr (EAp exprA exprB) =
-  "("
+  "return ("
   <> (compileExpr exprA)
+  <> "("
   <> (compileExpr exprB)
-  <> ")"
+  <> "))"
 -- ELet False [("a",EVar "1")] (EVar "a"))
 compileExpr (ELet recursive vars expr) =
   handleVars vars
