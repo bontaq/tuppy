@@ -9,5 +9,8 @@
 * About row types (1991)
 ** https://core.ac.uk/download/pdf/82197591.pdf
 
+* A Polymorphic Type System for Extensible Records and Variants (1996)
+** https://pdfs.semanticscholar.org/e529/13a157b06a95951e19cde54a776e16adee11.pdf
+
 * About typeclasses (unknown)
 ** https://www.cs.tufts.edu/comp/150PLD/Notes/TypeClasses.pdf
