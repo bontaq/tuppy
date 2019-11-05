@@ -83,6 +83,12 @@ pVar = pSat (not . (flip elem) keywords)
 pNum :: Parser Int
 pNum = pApply (pSat (all isDigit)) (\c -> read c :: Int)
 
+-- TODO: multiple words
+pStr :: Parser CoreExpr
+pStr = pThen3 mkStr (pLit "\"") pVar (pLit "\"")
+  where
+    mkStr _ x _ = EStr x
+
 -- combining two parsers, returns whichever matched
 pAlt :: Parser a -> Parser a -> Parser a
 pAlt p1 p2 toks = (p1 toks) ++ (p2 toks)
@@ -169,6 +175,7 @@ pSat _ _ = []
 pAexpr :: Parser CoreExpr
 pAexpr =
   pApply pNum ENum
+  `pAlt` pStr
   `pAlt` pLambda
   `pAlt` pApply pVar EVar
   `pAlt` pLet
@@ -246,3 +253,6 @@ test6 =
 
 test7 =
   syntax $ clex 0 "main = \\x -> + x x ;"
+
+test8 =
+  syntax $ clex 0 "main = \"hello\" ;"
