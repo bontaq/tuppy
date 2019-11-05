@@ -169,6 +169,7 @@ pSat _ _ = []
 pAexpr :: Parser CoreExpr
 pAexpr =
   pApply pNum ENum
+  `pAlt` pLambda
   `pAlt` pApply pVar EVar
   `pAlt` pLet
 
@@ -187,6 +188,11 @@ pLet :: Parser CoreExpr
 pLet = pThen4 mkLet (pLit "let") pIns (pLit "in") pExpr
   where
     mkLet _ vs _ e = ELet False vs e
+
+pLambda :: Parser CoreExpr
+pLambda = pThen4 mkLambda (pLit "\\") (pOneOrMore pVar) (pLit "->") pExpr
+  where
+    mkLambda _ vars _ e = ELam vars e
 
 --
 -- parse (core language)
@@ -237,3 +243,6 @@ test5txt = "square x = multiply x y ; main = square 3 2"
 
 test6 =
   syntax $ clex 0 "lettest x = let a = 1 in a ;"
+
+test7 =
+  syntax $ clex 0 "main = \\x -> + x x ;"
