@@ -40,6 +40,14 @@ test3 =
   in
     typeCheckList typeEnv [0] $ translatedCore $ syntax $ clex 0 "test = let x = 1 in x ;"
 
+test4 =
+  let
+    translate (name, vars, expr) = expr
+    translatedCore = map translate
+    typeEnv = []
+  in
+    typeCheckList typeEnv [0] $ translatedCore $ syntax $ clex 0 "test = \"sup\" ;"
+
 runTest test =
   case test of
     (Ok (_, t)) -> "Ok! " <> show t
@@ -58,3 +66,7 @@ spec = do
       runTest TypeCheckerSpec.test3
       `shouldBe`
       "Ok! [TypeConstructor \"int\" []]"
+    it "works for string" $ do
+      runTest TypeCheckerSpec.test4
+      `shouldBe`
+      "Ok! [TypeConstructor \"string\" []]"

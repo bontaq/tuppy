@@ -178,6 +178,7 @@ typeCheck ::
 -- typeCheck gamma ns x | trace ("Gamma " <> show gamma <> "\nNS " <> show ns <> "\nX " <> show x <> "\n") False = undefined
 typeCheck gamma ns (EVar x) = typeCheckVar gamma ns x
 typeCheck gamma ns (ENum x) = typeCheckNum gamma ns x
+typeCheck gamma ns (EStr x) = typeCheckStr gamma ns x
 typeCheck gamma ns (EAp e1 e2) = typeCheckAp gamma ns e1 e2
 -- TODO: fix cheating and only checking the first lambda variable
 -- ie \x y -> * x y only x would be included and error on seeing y
@@ -326,6 +327,9 @@ typeCheckNum ::
   [(a, TypeScheme)] -> [Int] -> Int -> Reply (Subst, TypeExpression) b
 typeCheckNum gamma ns x =
   Ok (idSubstitution, int)
+
+typeCheckStr gamma ns x =
+  Ok (idSubstitution, string)
 
 alToSubst al tvn
   | tvn `elem` (dom al) = TypeVar (val al tvn)
