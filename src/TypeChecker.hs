@@ -182,7 +182,7 @@ typeCheck gamma ns (EAp e1 e2) = typeCheckAp gamma ns e1 e2
 -- TODO: fix cheating and only checking the first lambda variable
 -- ie \x y -> * x y only x would be included and error on seeing y
 typeCheck gamma ns (ELam (x:_) e) = typeCheckLambda gamma ns x e
-typeCheck gamma ns (ELet isRec xs es) = typeCheckLet gamma ns xs es
+typeCheck gamma ns (ELet isRec xs e) = typeCheckLet gamma ns xs e
 typeCheck _ _ e = error $ show e
 
 typeCheckAp gamma ns e1 e2 =
@@ -223,9 +223,14 @@ newBVar (x, tvn) = (nameToNumber x, Scheme [] (TypeVar tvn))
 
 -- difference from the 1987 paper, the xs and es are not separated
 -- in our language
-typeCheckLet gamma ns xs es e =
-  typeCheckLet1 gamma ns0 xs e (typeCheckList gamma ns1 es)
+typeCheckLet ::
+  [(TypeVarName, TypeScheme)]
+  -> [Int] -> [(Name, VExpr)] -> VExpr -> Reply (Subst, TypeExpression) [Char]
+typeCheckLet gamma ns xs e =
+  typeCheckLet1 gamma ns0 names e (typeCheckList gamma ns1 es)
   where
+    es = map snd xs
+    names = map fst xs
     (ns0, ns1) = split ns
 
 typeCheckLet1 gamma ns xs e (Failure _) = Failure "failed in let1"
@@ -240,7 +245,7 @@ typeCheckLet2 phi (Failure _) = Failure "failed in let2"
 typeCheckLet2 phi (Ok (phi', t))
   = Ok (phi' `scompose` phi, t)
 
--- adddeclarations is to update the type environment, gamma,
+-- addDeclarations is to update the type environment, gamma,
 -- so that it associates schematic types form the types ts with
 -- the variables xs
 -- the variables that become schematic are those that are not unknown
