@@ -14,6 +14,7 @@ type CoreAlt = Alter Name
 data Expr a
   = EVar Name -- Variables
   | ENum Int  -- Numbers
+  | EStr String -- Strings
   | EConstr Int Int -- Constructor tag arity
   | EAp (Expr a) (Expr a) -- Applications
   | ELet                  -- Let (rec) expressions
