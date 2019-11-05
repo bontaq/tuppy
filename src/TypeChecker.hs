@@ -251,19 +251,22 @@ typeCheckLet2 phi (Ok (phi', t))
 -- the variables that become schematic are those that are not unknown
 addDeclarations :: TypeEnv -> NameSupply -> [Name] -> [TypeExpression] -> TypeEnv
 addDeclarations gamma ns xs ts =
-  (xs `zip` schemes) ++ gamma
+  ((map nameToNumber xs) `zip` schemes) ++ gamma
   where
     unknowns = unknownTypeEnv gamma
     schemes = map (genBar unknowns ns) ts
 
+genBar :: [TypeVarName] -> [Int] -> TypeExpression -> TypeScheme
 genBar unknowns ns t =
   Scheme (map snd al) t'
   where
-    scvs = dedupe (typeVarsIn t) $ bar unknowns
+    scvs = dedupe (typeVarsIn t) <> unknowns
     al = scvs `zip` (nameSequence ns)
     t' = subType (alToSubst al) t
 
-dedupe = id
+dedupe (x:xs) = case x `elem` xs of
+  True -> xs
+  False -> x:dedupe(xs)
 
 typeCheckList ::
   TypeEnv
