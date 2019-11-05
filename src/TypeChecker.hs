@@ -179,7 +179,9 @@ typeCheck gamma ns x | trace ("Gamma " <> show gamma <> "\nNS " <> show ns <> "\
 typeCheck gamma ns (EVar x) = typeCheckVar gamma ns x
 typeCheck gamma ns (ENum x) = typeCheckNum gamma ns x
 typeCheck gamma ns (EAp e1 e2) = typeCheckAp gamma ns e1 e2
-typeCheck gamma ns (ELam x e) = typeCheckLam gamma ns x e
+-- TODO: fix cheating and only checking the first lambda variable
+-- ie \x y -> * x y only x would be included and error on seeing y
+typeCheck gamma ns (ELam (x:_) e) = typeCheckLambda gamma ns x e
 typeCheck gamma ns (ELet isRec xs es) = typeCheckLet gamma ns xs es
 typeCheck _ _ e = error $ show e
 
@@ -196,8 +198,28 @@ typeCheckAp2 tvn (Failure s) =
   Failure $ "Ap2 " <> s
 typeCheckAp2 tvn (Ok phi) = Ok (phi, phi tvn)
 
-typeCheckLam = undefined
+typeCheckLambda ::
+  TypeEnv ->
+  NameSupply ->
+  Name ->
+  VExpr ->
+  Reply (Subst, TypeExpression) String
+typeCheckLambda gamma ns x e =
+  typeCheckLambda1 tvn (typeCheck gamma' ns' e)
+  where
+    ns' = deplete ns
+    gamma' = newBVar (x, tvn) : gamma
+    tvn = nextName ns
+
+typeCheckLambda1 tvn (Failure _) = Failure ""
+typeCheckLambda1 tvn (Ok (phi, t)) =
+  Ok (phi, (phi tvn) `arrow` t)
+
+newBVar (x, tvn) = (nameToNumber x, Scheme [] (TypeVar tvn))
+
+
 typeCheckLet = undefined
+
 
 typeCheckList ::
   TypeEnv
