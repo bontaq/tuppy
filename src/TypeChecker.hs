@@ -132,7 +132,7 @@ dom :: AssocList a b -> [a]
 dom al = [ k | (k, v) <- al ]
 
 val :: (Show a, Show b, Eq a) => AssocList a b -> a -> b
-val al k | trace ("Val " <> show al <> " Key " <> show k) False = undefined
+-- val al k | trace ("Val " <> show al <> " Key " <> show k) False = undefined
 val al k =
   let val = [ v | (k', v) <- al
                 , k == k' ]
@@ -175,7 +175,7 @@ typeCheck ::
   NameSupply ->
   VExpr ->
   Reply (Subst, TypeExpression) String
-typeCheck gamma ns x | trace ("Gamma " <> show gamma <> "\nNS " <> show ns <> "\nX " <> show x <> "\n") False = undefined
+-- typeCheck gamma ns x | trace ("Gamma " <> show gamma <> "\nNS " <> show ns <> "\nX " <> show x <> "\n") False = undefined
 typeCheck gamma ns (EVar x) = typeCheckVar gamma ns x
 typeCheck gamma ns (ENum x) = typeCheckNum gamma ns x
 typeCheck gamma ns (EAp e1 e2) = typeCheckAp gamma ns e1 e2
@@ -294,6 +294,18 @@ test2 =
       , (nameToNumber "multiply", Scheme [] (arrow int (arrow int int)))]
   in
     typeCheckList typeEnv [0] $ translatedCore $ syntax $ clex 0 "square = multiply x x ;"
+
+typeCheckCore :: CoreProgram -> Reply (Subst, [TypeExpression]) String
+typeCheckCore c =
+  let
+    translate (name, vars, expr) = expr
+    translatedCore = map translate
+    typeEnv :: [([Int], TypeScheme)]
+    typeEnv =
+      [ (nameToNumber "square", Scheme [] (arrow int int))
+      , (nameToNumber "multiply", Scheme [] (arrow int (arrow int int))) ]
+  in
+    typeCheckList typeEnv [0] $ translatedCore c
 
 runTest' test =
   case test of

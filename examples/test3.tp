@@ -1,0 +1,3 @@
+square x = multipy x x ;
+
+main = square 2 ;

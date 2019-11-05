@@ -5,6 +5,7 @@ module Parser where
 import Language
 import Printer
 import Data.Char (isDigit, isSpace, isAlpha)
+import Debug.Trace
 
 -- read -> lex -> parse -> CoreProgram
 -- parse = syntax . clex
@@ -198,7 +199,6 @@ mkSc :: String   -- main (fn name)
      -> (Name, [Name], CoreExpr)
 mkSc name vars eq expr = (name, vars, expr)
 
--- pSc :: Parser CoreScDefn
 pSc :: Parser (Name, [Name], CoreExpr)
 pSc = pThen4 mkSc pVar (pZeroOrMore pVar) (pLit "=") pExpr
 
@@ -206,7 +206,7 @@ pProgram :: Parser CoreProgram
 pProgram = pOneOrMoreWithSep pSc (pLit ";")
 
 syntax :: [Token] -> CoreProgram
-syntax = takeFirstParse . pProgram
+syntax toks = takeFirstParse . pProgram $ toks
   where
     takeFirstParse ((prog, []) : others) = prog
     takeFirstParse (parse      : others) = takeFirstParse others
