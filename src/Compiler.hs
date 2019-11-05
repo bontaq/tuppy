@@ -11,6 +11,7 @@ intersperse c (x:xs) = x <> c <> (intersperse c xs)
 compileExpr :: Expr Name -> String
 -- EAp (EAp (EVar "multiply") (EVar "x")) (EVar "y"))
 compileExpr (EVar a) = a <> " "
+compileExpr (EStr a) = "\"" <> a <> "\""
 compileExpr (EAp exprA exprB) =
   "("
   <> (compileExpr exprA)
@@ -54,3 +55,6 @@ test3 = testRun "square x = multiply x y ;"
 
 test4 =
   testRun "lettest x = let a = 1 in + a 1 ;"
+
+test5 =
+  testRun "main = \"hello\" ;"
