@@ -217,9 +217,48 @@ typeCheckLambda1 tvn (Ok (phi, t)) =
 
 newBVar (x, tvn) = (nameToNumber x, Scheme [] (TypeVar tvn))
 
+-- first type check all the right hand side of let ... up to in
+-- then, update the environment with that information
+-- and finally, type check the body with the new environment
 
-typeCheckLet = undefined
+-- difference from the 1987 paper, the xs and es are not separated
+-- in our language
+typeCheckLet gamma ns xs es e =
+  typeCheckLet1 gamma ns0 xs e (typeCheckList gamma ns1 es)
+  where
+    (ns0, ns1) = split ns
 
+typeCheckLet1 gamma ns xs e (Failure _) = Failure "failed in let1"
+typeCheckLet1 gamma ns xs e (Ok (phi, ts)) =
+  typeCheckLet2 phi (typeCheck gamma'' ns1 e)
+  where
+    gamma' = subTypeEnv phi gamma
+    gamma'' = addDeclarations gamma' ns0 xs ts
+    (ns0, ns1) = split ns
+
+typeCheckLet2 phi (Failure _) = Failure "failed in let2"
+typeCheckLet2 phi (Ok (phi', t))
+  = Ok (phi' `scompose` phi, t)
+
+-- adddeclarations is to update the type environment, gamma,
+-- so that it associates schematic types form the types ts with
+-- the variables xs
+-- the variables that become schematic are those that are not unknown
+addDeclarations :: TypeEnv -> NameSupply -> [Name] -> [TypeExpression] -> TypeEnv
+addDeclarations gamma ns xs ts =
+  (xs `zip` schemes) ++ gamma
+  where
+    unknowns = unknownTypeEnv gamma
+    schemes = map (genBar unknowns ns) ts
+
+genBar unknowns ns t =
+  Scheme (map snd al) t'
+  where
+    scvs = dedupe (typeVarsIn t) $ bar unknowns
+    al = scvs `zip` (nameSequence ns)
+    t' = subType (alToSubst al) t
+
+dedupe = id
 
 typeCheckList ::
   TypeEnv
