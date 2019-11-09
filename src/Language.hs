@@ -12,20 +12,21 @@ type CoreAlt = Alter Name
 
 
 data Expr a
-  = EVar Name -- Variables
-  | ENum Int  -- Numbers
-  | EStr String -- Strings
-  | EConstr Int Int -- Constructor tag arity
-  | EAp (Expr a) (Expr a) -- Applications
+  = EVar Name             -- Variables
+  | ENum Int              -- Numbers
+  | EStr String           -- Strings
+  | EAp (Expr a) (Expr a) -- Application
+  | ELam [a] (Expr a)     -- lambda expressions like \x -> x
   | ELet                  -- Let (rec) expressions
     IsRec                 -- boolean with True = recursive
     [(a, Expr a)]         -- definitions
     (Expr a)              -- body of let(rec)
-  | ECase
-    (Expr a)
-    [Alter a]
-  | ELam [a] (Expr a)
-  deriving (Show)
+
+  -- | EConstr Int Int -- Constructor tag arity
+  -- | ECase
+  --   (Expr a)
+  --   [Alter a]
+  deriving (Show, Eq)
 
 type CoreExpr = Expr Name
 
@@ -36,8 +37,7 @@ type CoreScDefn = ScDefn Name
 type Program a = [ScDefn a]
 type CoreProgram = Program Name
 
--- defines some combinators for the core languages
--- mostly just function application
+-- example of the core language
 preludeDefs :: CoreProgram
 preludeDefs
   = [ ("I", ["x"], EVar "x")

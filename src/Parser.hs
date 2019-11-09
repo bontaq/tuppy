@@ -34,8 +34,10 @@ isTwoCharOp s = s `elem` twoCharOps
 -- lex
 --
 -- the smallest part, which creates tokens for the parser
--- to consume
+-- to consume.  it ignores space, comments, etc
 
+-- integer can be ignored, could eventually be the current offset
+-- for now it just means put a 0 in args
 type Token = (Integer, String)
 
 clex :: Integer -> String -> [Token]
@@ -52,9 +54,9 @@ clex n (c:cs) | isAlpha c = varToken : clex n restCs
     varToken = (,) n $ c : takeWhile isIdChar cs
     restCs = dropWhile isIdChar cs
 
-clex n (c:d:cs) | isComment [c,d] = comToken : clex n restCs
+clex n (c:d:cs) | isComment [c,d] = clex n restCs
   where
-    comToken = (,) n $ takeWhile (not . isEndOfLine) cs
+    -- comToken = (,) n $ takeWhile (not . isEndOfLine) cs
     restCs = dropWhile (not . isEndOfLine) cs
 
 clex n (c:d:cs) | isTwoCharOp [c,d] = opToken : clex n restCs
@@ -77,6 +79,17 @@ clex n [] = []
 -- pHelloOrGoodbye = (pLit "hello") `pAlt` (pLit "goodbye")
 
 type Parser a = [Token] -> [(a, [Token])]
+
+-- parse literal
+pLit :: String -> Parser String
+pLit s = pSat (== s)
+
+pNum :: Parser Int
+pNum = pApply (pSat (all isDigit)) (\c -> read c :: Int)
+
+pEmpty :: a -> Parser a
+pEmpty p toks = [(p, toks)]
+
 
 -- combining two parsers, returns whichever matched
 pAlt :: Parser a -> Parser a -> Parser a
@@ -112,9 +125,6 @@ pThen4 combine p1 p2 p3 p4 toks =
 pZeroOrMore :: Parser a -> Parser [a]
 pZeroOrMore p = pOneOrMore p `pAlt` pEmpty []
 
-pEmpty :: a -> Parser a
-pEmpty p toks = [(p, toks)]
-
 -- this could be made more efficient by finishing after the first result is found
 pOneOrMore :: Parser a -> Parser [a]
 pOneOrMore p =
@@ -141,9 +151,6 @@ pSat f ((n, tok) : toks) =
     False -> []
 pSat _ _ = []
 
--- parse literal
-pLit :: String -> Parser String
-pLit s = pSat (== s)
 
 mkApChain :: [CoreExpr] -> CoreExpr
 mkApChain (e:es) = foldl EAp e es
@@ -156,9 +163,6 @@ keywords = ["let", "letrec", "case", "in", "of", "Pack", "="]
 
 pVar :: Parser String
 pVar = pSat (not . (flip elem) keywords)
-
-pNum :: Parser Int
-pNum = pApply (pSat (all isDigit)) (\c -> read c :: Int)
 
 -- TODO: multiple words
 pStr :: Parser CoreExpr

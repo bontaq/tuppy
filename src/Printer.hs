@@ -77,8 +77,8 @@ prettyPrintExpr (ELet isrec defns expr)
     keyword | not isrec = "let"
             | isrec     = "letrec"
 
-prettyPrintExpr (ECase expr alter)
-  = iNil
+-- prettyPrintExpr (ECase expr alter)
+--   = iNil
 
 prettyPrintExpr (ELam a expr)
   = iNil
