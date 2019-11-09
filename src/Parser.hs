@@ -217,35 +217,3 @@ syntax toks = takeFirstParse . pProgram $ toks
     takeFirstParse ((prog, []) : others) = prog
     takeFirstParse (parse      : others) = takeFirstParse others
     takeFirstParse other                 = error "Syntax error"
-
-test1 :: CoreProgram
-test1 =
-  syntax $ clex 0 "a = a ;"
-
-test2 :: CoreProgram
-test2 =
-  syntax $ clex 0 "square x = multiply x y ;"
-
-test3 :: String
-test3 =
-  pprint $ syntax $ clex 0 "main = square (square 3) ;"
-
-test4 :: CoreProgram
-test4 =
-  syntax $ clex 0 "main = square (square 3) ;"
-
-test5 :: CoreProgram
-test5 =
-  syntax $ clex 0 "square x = multiply x y ; main = square 3 2 ;"
-
-test5txt :: [Char]
-test5txt = "square x = multiply x y ; main = square 3 2"
-
-test6 =
-  syntax $ clex 0 "lettest x = let a = 1 in a ;"
-
-test7 =
-  syntax $ clex 0 "main = \\x -> + x x ;"
-
-test8 =
-  syntax $ clex 0 "main = \"hello\" ;"
