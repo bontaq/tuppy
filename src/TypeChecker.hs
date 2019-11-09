@@ -335,17 +335,6 @@ alToSubst al tvn
   | tvn `elem` (dom al) = TypeVar (val al tvn)
   | otherwise           = TypeVar tvn
 
-test2 =
-  let
-    translate (name, vars, expr) = expr
-    translatedCore = map translate
-    typeEnv = [
-      (nameToNumber "x", Scheme [] (TypeVar (nameToNumber "x")))
-      , (nameToNumber "y", Scheme [] (TypeVar (nameToNumber "y")))
-      , (nameToNumber "multiply", Scheme [] (arrow int (arrow int int)))]
-  in
-    typeCheckList typeEnv [0] $ translatedCore $ syntax $ clex 0 "square = multiply x x ;"
-
 typeCheckCore :: CoreProgram -> Reply (Subst, [TypeExpression]) String
 typeCheckCore c =
   let
@@ -358,6 +347,7 @@ typeCheckCore c =
   in
     typeCheckList typeEnv [0] $ translatedCore c
 
+-- helper for use with ghci
 runTest' test =
   case test of
     (Ok (_, t)) -> "Ok! " <> show t

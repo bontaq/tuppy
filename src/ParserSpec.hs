@@ -84,7 +84,7 @@ spec = do
     -- syntax is the main function
     -- it takes a bunch of tokens, and turns them into Expr
     -- which is how we represent the language
-    it "can create a simple expression" $ do
+    it "can parse a simple expression" $ do
       let toks = clex 0 "a = a ;"
       syntax toks
       `shouldBe`
