@@ -124,3 +124,11 @@ spec = do
       syntax toks
       `shouldBe`
       [("main", [], ELam ["x"] (EVar "x"))]
+
+    it "can parse a number" $ do
+      let toks = clex 0 "main = 0 ;"
+      syntax toks `shouldBe` [("main", [], ENum 0)]
+
+    it "can parse a string" $ do
+      let toks = clex 0 "main = \"hello\" ;"
+      syntax toks `shouldBe` [("main", [], EStr "hello")]
