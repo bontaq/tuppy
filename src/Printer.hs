@@ -5,6 +5,9 @@ module Printer where
 import Data.List (intersperse)
 import Language
 
+-- | The printer, which takes a Program and pretty-prints
+-- | it
+
 recursive, nonRecursive :: IsRec
 recursive    = True
 nonRecursive = False
@@ -22,33 +25,6 @@ isAtomicExpr :: Expr a -> Bool
 isAtomicExpr (EVar v) = True
 isAtomicExpr (ENum n) = True
 isAtomicExpr _        = False
-
--- defines some combinators for the core languages
--- mostly just function application
-preludeDefs :: CoreProgram
-preludeDefs
-  = [ ("I", ["x"], EVar "x")
-    , ("K", ["x", "y"], EVar "x")
-    , ("K1", ["x", "y"], EVar "y")
-    , ("S"
-      , ["f", "g", "x"]
-      , EAp
-        (EAp (EVar "f") (EVar "x"))
-        (EAp (EVar "g") (EVar "x")))
-    , ("compose"
-      , ["f", "g", "x"]
-      , EAp
-        (EVar "f")
-        (EAp (EVar "g") (EVar "x")))
-    , ("twice"
-      , ["f"]
-      , EAp
-        (EAp (EVar "compose") (EVar "f")) (EVar "f"))
-    , ("lettest"
-      , ["f"]
-      , ELet False
-        [("f", (EAp (EVar "g") (EVar "x")))]
-        (EAp (EVar "test") (EVar "f"))) ]
 
 prettyPrintDefn :: (Name, CoreExpr) -> Iseq
 prettyPrintDefn (name, expr) =
@@ -77,11 +53,13 @@ prettyPrintExpr (ELet isrec defns expr)
     keyword | not isrec = "let"
             | isrec     = "letrec"
 
+-- TODO
 -- prettyPrintExpr (ECase expr alter)
 --   = iNil
 
-prettyPrintExpr (ELam a expr)
-  = iNil
+-- TODO
+-- prettyPrintExpr (ELam a expr)
+--   = iNil
 
 -- places parenthese around expr unless it's atomic
 prettyPrintAExpr :: CoreExpr -> Iseq

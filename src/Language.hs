@@ -18,10 +18,11 @@ data Expr a
   | EAp (Expr a) (Expr a) -- Application
   | ELam [a] (Expr a)     -- lambda expressions like \x -> x
   | ELet                  -- Let (rec) expressions
-    IsRec                 -- boolean with True = recursive
-    [(a, Expr a)]         -- definitions
-    (Expr a)              -- body of let(rec)
+    IsRec                 ---- boolean with True = recursive
+    [(a, Expr a)]         ---- definitions
+    (Expr a)              ---- body of let(rec)
 
+  -- not supported yet
   -- | EConstr Int Int -- Constructor tag arity
   -- | ECase
   --   (Expr a)
