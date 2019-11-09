@@ -29,20 +29,6 @@ data Expr a
 
 type CoreExpr = Expr Name
 
--- collects the list of variables
--- bindersOf :: [(a, b)] -> [a]
--- bindersOf defns = [name | (name, rhs) <- defns]
-
--- collects the list of definitions
--- rightHandSideOf :: [(a, b)] -> [b]
--- rightHandSideOf defns = [rhs | (name, rhs) <- defns]
-
--- atomic expressions have no internal structure
--- isAtomicExpr :: Expr a -> Bool
--- isAtomicExpr (EVar v) = True
--- isAtomicExpr (ENum n) = True
--- isAtomicExpr _        = False
-
 -- supercombinator definition (i.e. main = )
 type ScDefn a = (Name, [a], Expr a)
 type CoreScDefn = ScDefn Name

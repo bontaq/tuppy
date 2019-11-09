@@ -33,6 +33,8 @@ isTwoCharOp s = s `elem` twoCharOps
 --
 -- lex
 --
+-- the smallest part, which creates tokens for the parser
+-- to consume
 
 type Token = (Integer, String)
 
@@ -65,37 +67,20 @@ clex n (c:cs) = (n, [c]) : clex n cs
 clex n [] = []
 
 --
--- parse (library)
+-- parse (library / utilities section)
 --
+-- parsers return a success, meaning a token that matches
+-- the parser, or nothing, meaning it failed
+--
+-- example of a parser that matches hello or goodbye
+-- pHelloOrGoodbye :: Parser String
+-- pHelloOrGoodbye = (pLit "hello") `pAlt` (pLit "goodbye")
 
 type Parser a = [Token] -> [(a, [Token])]
-
-keywords :: [String]
-keywords = ["let", "letrec", "case", "in", "of", "Pack", "="]
-
--- parse literal
-pLit :: String -> Parser String
-pLit s = pSat (== s)
-
-pVar :: Parser String
-pVar = pSat (not . (flip elem) keywords)
-
-pNum :: Parser Int
-pNum = pApply (pSat (all isDigit)) (\c -> read c :: Int)
-
--- TODO: multiple words
-pStr :: Parser CoreExpr
-pStr = pThen3 mkStr (pLit "\"") pVar (pLit "\"")
-  where
-    mkStr _ x _ = EStr x
 
 -- combining two parsers, returns whichever matched
 pAlt :: Parser a -> Parser a -> Parser a
 pAlt p1 p2 toks = (p1 toks) ++ (p2 toks)
-
--- example that matches hello or goodbye
-pHelloOrGoodbye :: Parser String
-pHelloOrGoodbye = (pLit "hello") `pAlt` (pLit "goodbye")
 
 -- apply first parser, then second on remainder of input,
 -- then combine result with the combining fn (a -> b -> c)
@@ -123,18 +108,6 @@ pThen4 combine p1 p2 p3 p4 toks =
                                  , (v3, toks3) <- p3 toks2
                                  , (v4, toks4) <- p4 toks3 ]
 
--- example, matches on hello or goodbye + a string (like james)
-pGreeting :: Parser (String, String)
-pGreeting = pThen mkPair pHelloOrGoodbye pVar
-  where
-    mkPair hg name = (hg, name)
-
--- example, throws out the "!" with pThen3
-pGreeting' :: Parser (String, String)
-pGreeting' = pThen3 mkGreeting pHelloOrGoodbye pVar (pLit "!")
-  where
-    mkGreeting hg name exclamation = (hg, name)
-
 -- recognize zero or more of a parser
 pZeroOrMore :: Parser a -> Parser [a]
 pZeroOrMore p = pOneOrMore p `pAlt` pEmpty []
@@ -152,10 +125,6 @@ pApply :: Parser a -> (a -> b) -> Parser b
 pApply p f toks =
   [ (f(n), toks') | (n, toks') <- p toks ]
 
--- example of use
-pGreetingsN :: Parser Int
-pGreetingsN = (pZeroOrMore pGreeting) `pApply` length
-
 -- second parser represents the separator, not returned
 -- TODO: this might need to be fixed to understand "a,b,c" and include the c
 pOneOrMoreWithSep :: Parser a -> Parser b -> Parser [a]
@@ -172,16 +141,30 @@ pSat f ((n, tok) : toks) =
     False -> []
 pSat _ _ = []
 
-pAexpr :: Parser CoreExpr
-pAexpr =
-  pApply pNum ENum
-  `pAlt` pStr
-  `pAlt` pLambda
-  `pAlt` pApply pVar EVar
-  `pAlt` pLet
+-- parse literal
+pLit :: String -> Parser String
+pLit s = pSat (== s)
 
 mkApChain :: [CoreExpr] -> CoreExpr
 mkApChain (e:es) = foldl EAp e es
+
+--
+-- parse (core language)
+--
+keywords :: [String]
+keywords = ["let", "letrec", "case", "in", "of", "Pack", "="]
+
+pVar :: Parser String
+pVar = pSat (not . (flip elem) keywords)
+
+pNum :: Parser Int
+pNum = pApply (pSat (all isDigit)) (\c -> read c :: Int)
+
+-- TODO: multiple words
+pStr :: Parser CoreExpr
+pStr = pThen3 mkStr (pLit "\"") pVar (pLit "\"")
+  where
+    mkStr _ x _ = EStr x
 
 pExpr :: Parser CoreExpr
 pExpr = pApply (pOneOrMore pAexpr) mkApChain
@@ -201,9 +184,15 @@ pLambda = pThen4 mkLambda (pLit "\\") (pOneOrMore pVar) (pLit "->") pExpr
   where
     mkLambda _ vars _ e = ELam vars e
 
---
--- parse (core language)
---
+-- this is the big one, which defines each acceptable parse
+-- for the language.  it goes through and tries each.
+pAexpr :: Parser CoreExpr
+pAexpr =
+  pApply pNum ENum
+  `pAlt` pStr
+  `pAlt` pLambda
+  `pAlt` pApply pVar EVar
+  `pAlt` pLet
 
 mkSc :: String   -- main (fn name)
      -> [String] -- a b  (variables)
