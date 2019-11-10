@@ -44,7 +44,7 @@ handleCompile f =
 
 replaceEnding :: [Char] -> [Char]
 replaceEnding (".tp") = ".js"
-replaceEnding (x:xs) = [x] <> replaceEnding xs
+replaceEnding (x:xs) = x : replaceEnding xs
 replaceEnding _ = error "Filename did not end in .tp"
 
 run :: Args -> IO ()
@@ -55,3 +55,27 @@ run (Args compile file) = do
   putStrLn newFile
   writeFile newFile js
   putStrLn "Ok!"
+
+--
+-- various things to help with repl driven development
+--
+
+-- filename -> compiled results
+-- for example:
+-- replCompile "./examples/test2.tp"
+replCompile :: String -> IO ()
+replCompile fp = do
+  f <- readFile fp
+  putStrLn $ handleCompile f
+
+-- only do the syntax step
+replSyntax :: String -> IO ()
+replSyntax fp = do
+  f <- readFile fp
+  putStrLn $ show . syntax . (clex 0) $ f
+
+-- compile, but skip typechecking
+replCompileNoTC :: String -> IO ()
+replCompileNoTC fp = do
+  f <- readFile fp
+  putStrLn $ show . Compiler.compile . syntax . (clex 0) $ f

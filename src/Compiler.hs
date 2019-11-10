@@ -9,6 +9,7 @@ import Parser
 -- It takes a CoreProgram and produces a string, that happens to be
 -- valid javascript.  So far, it doesn't do anything fancy at all.
 
+-- for commas in function arguments like function a(b,c,d) {
 intersperse :: String -> [String] -> String
 intersperse _ [] = ""
 intersperse c [x] = x

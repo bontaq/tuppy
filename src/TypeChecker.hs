@@ -131,19 +131,20 @@ type AssocList a b = [(a, b)]
 dom :: AssocList a b -> [a]
 dom al = [ k | (k, v) <- al ]
 
-val :: (Show a, Show b, Eq a) => AssocList a b -> a -> b
+val :: (Show b) => AssocList TypeVarName b -> TypeVarName -> b
 -- val al k | trace ("Val " <> show al <> " Key " <> show k) False = undefined
 val al k =
   let val = [ v | (k', v) <- al
                 , k == k' ]
   in case length val of
-    0 -> error "nope"
+    0 -> error $
+      "Could not find variable: " <> (numberToName k) <> "\n"
     _ -> head val
 
 install :: [(a, b)] -> a -> b -> [(a, b)]
 install al k v = (k, v) : al
 
-mg :: (Show a, Show b, Eq a) => AssocList a b -> [b]
+mg :: (Show b) => AssocList TypeVarName b -> [b]
 mg al = map (val al) (dom al)
 
 type TypeEnv = AssocList TypeVarName TypeScheme
@@ -310,6 +311,12 @@ nameToNumber =
   in
     map (\x -> fromJust $ lookup x numLookup)
 
+numberToName :: [Int] -> [Char]
+numberToName =
+  let charLookup = zip [0..] ['a'..'z']
+  in
+    map (\x -> fromJust $ lookup x charLookup)
+
 typeCheckVar ::
   [([Int], TypeScheme)]
   -> [Int] -> [Char] -> Reply (Subst, TypeExpression) b
@@ -340,9 +347,8 @@ typeCheckCore c =
   let
     translate (name, vars, expr) = expr
     translatedCore = map translate
-    typeEnv :: [([Int], TypeScheme)]
     typeEnv =
-      [ (nameToNumber "square", Scheme [] (arrow int int))
+      [ (nameToNumber "square", Scheme [(nameToNumber "x")] (arrow int int))
       , (nameToNumber "multiply", Scheme [] (arrow int (arrow int int))) ]
   in
     typeCheckList typeEnv [0] $ translatedCore c
