@@ -3,6 +3,12 @@ module Compiler where
 import Language
 import Parser
 
+
+-- | The compiler
+--
+-- It takes a CoreProgram and produces a string, that happens to be
+-- valid javascript.  So far, it doesn't do anything fancy at all.
+
 intersperse :: String -> [String] -> String
 intersperse _ [] = ""
 intersperse c [x] = x
@@ -41,20 +47,3 @@ compile' (name, vars, expr) =
 
 compile :: CoreProgram -> String
 compile = concat . fmap compile'
-
-testRun :: String -> String
-testRun = compile . syntax . (clex 0)
-
-test0 = syntax $ clex 0 "a = 0 ;"
-
-test1 = testRun "a = 0 ;"
-
-test2 = syntax $ clex 0 "square x = multiply x y ;"
-
-test3 = testRun "square x = multiply x y ;"
-
-test4 =
-  testRun "lettest x = let a = 1 in + a 1 ;"
-
-test5 =
-  testRun "main = \"hello\" ;"

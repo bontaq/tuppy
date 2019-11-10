@@ -13,7 +13,6 @@ main = hspec spec
 spec :: Spec
 spec = do
   describe "Clex" $ do
-
     it "produces tokens for a string" $ do
       clex 0 "hello"
       `shouldBe`
@@ -31,14 +30,14 @@ spec = do
 
     it "works for a larger example" $ do
       clex 0 [r|
-               a x = 1
+               a x = 1 ;
                || test comment
-               lambda = \x -> y
+               lambda = \x -> y ;
                |]
       `shouldBe`
-      [ (0,"a"), (0,"x"), (0,"="), (0,"1")
+      [ (0,"a"), (0,"x"), (0,"="), (0,"1"), (0, ";")
         -- that double "\\" is weird, did it escape the character?
-      , (0,"lambda"), (0,"="), (0,"\\"), (0,"x"), (0,"->"), (0,"y")]
+      , (0,"lambda"), (0,"="), (0,"\\"), (0,"x"), (0,"->"), (0,"y"), (0, ";")]
 
   describe "Parser" $ do
     -- this will all be replaced by a real parser library at some point
