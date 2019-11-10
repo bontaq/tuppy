@@ -27,13 +27,18 @@ compileExpr (EAp exprA exprB) =
 -- ELet False [("a",EVar "1")] (EVar "a"))
 compileExpr (ELet recursive vars expr) =
   handleVars vars
-  <> "\n return "
-  <> (compileExpr expr)
+  <> "\n "
+  <> "return " <> (compileExpr expr)
   where
     handleVars = concat . map handleVar
     handleVar (name, expr) = "var " <> name <> " =" <> compileExpr expr <> ";"
 
 compileExpr (ENum n) = show n
+
+-- I hate to special case let like this, but seems necessary otherwise
+-- there's too many returns
+compileExpr' elet@(ELet _ _ _) = compileExpr elet
+compileExpr' expr = "return " <> compileExpr expr
 
 compile' :: ScDefn Name -> String
 compile' (name, [], (EVar v)) =
@@ -42,7 +47,7 @@ compile' (name, vars, expr) =
   "function " <> name <> "("
   <> (intersperse "," vars)
   <> ") {\n "
-  <> "return " <> (compileExpr expr)
+  <> (compileExpr' expr)
   <> "\n};\n"
 
 compile :: CoreProgram -> String
