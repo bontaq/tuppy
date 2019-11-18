@@ -15,7 +15,7 @@ translatedCore = map translate
 
 runTest :: TypeEnv -> String -> String
 runTest typeEnv strProgram =
-  let result = typeCheckList typeEnv [0] $ translatedCore . syntax $ clex 0 strProgram
+  let result = typeCheckCore $ syntax $ clex 0 strProgram
   in case result of
     (Ok (_, t)) -> "Ok: " <> show t
     (Failure x) -> "Failed: " <> show x
@@ -44,3 +44,10 @@ spec = do
       `shouldBe`
         "Failed: \"Ap2 Could not unify: TCN: int TS: [] TCN: string TS: []\""
         -- now THAT is one ugly error message
+    it "works for multiple lines" $ do
+      runTest
+        [ (nameToNumber "multiply"
+        , Scheme [] (arrow int (arrow int int))) ]
+        "square x = multiply x x ; main = square 2 ;"
+      `shouldBe`
+        ""

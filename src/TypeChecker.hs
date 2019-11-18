@@ -162,10 +162,10 @@ type NameSupply = TypeVarName
 
 nextName ns = ns
 
-deplete :: [Int] -> [Int]
+deplete :: NameSupply -> NameSupply
 deplete (n:ns) = (n+2:ns)
 
-split :: [Int] -> ([Int], [Int])
+split :: NameSupply -> (NameSupply, NameSupply)
 split ns = (0:ns, 1:ns)
 
 nameSequence :: NameSupply -> [TypeVarName]
@@ -227,7 +227,10 @@ newBVar (x, tvn) = (nameToNumber x, Scheme [] (TypeVar tvn))
 -- in our language
 typeCheckLet ::
   [(TypeVarName, TypeScheme)]
-  -> [Int] -> [(Name, VExpr)] -> VExpr -> Reply (Subst, TypeExpression) [Char]
+  -> NameSupply
+  -> [(Name, VExpr)]
+  -> VExpr
+  -> Reply (Subst, TypeExpression) [Char]
 typeCheckLet gamma ns xs e =
   typeCheckLet1 gamma ns0 names e (typeCheckList gamma ns1 es)
   where
@@ -258,7 +261,7 @@ addDeclarations gamma ns xs ts =
     unknowns = unknownTypeEnv gamma
     schemes = map (genBar unknowns ns) ts
 
-genBar :: [TypeVarName] -> [Int] -> TypeExpression -> TypeScheme
+genBar :: [TypeVarName] -> NameSupply -> TypeExpression -> TypeScheme
 genBar unknowns ns t =
   Scheme (map snd al) t'
   where
@@ -318,8 +321,8 @@ numberToName =
     map (\x -> fromJust $ lookup x charLookup)
 
 typeCheckVar ::
-  [([Int], TypeScheme)]
-  -> [Int] -> [Char] -> Reply (Subst, TypeExpression) b
+  [(TypeVarName, TypeScheme)]
+  -> NameSupply -> [Char] -> Reply (Subst, TypeExpression) b
 typeCheckVar gamma ns x =
   Ok (idSubstitution, newInstance ns scheme)
   where
@@ -331,7 +334,7 @@ typeCheckVar gamma ns x =
 
 typeCheckNum ::
   (Show a, Show b, Eq a) =>
-  [(a, TypeScheme)] -> [Int] -> Int -> Reply (Subst, TypeExpression) b
+  [(a, TypeScheme)] -> NameSupply -> Int -> Reply (Subst, TypeExpression) b
 typeCheckNum gamma ns x =
   Ok (idSubstitution, int)
 
