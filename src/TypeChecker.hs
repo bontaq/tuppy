@@ -22,7 +22,6 @@ data TypeExpression = TypeVar TypeVarName
 -- and we're saying "if we apply these subtitutions,
 -- the equations will be solved"
 
-
 -- represent a transformation from t1 to t2
 arrow :: TypeExpression -> TypeExpression -> TypeExpression
 arrow t1 t2 = TypeConstructor "arrow" [t1, t2]
@@ -226,13 +225,13 @@ newBVar (x, tvn) = (nameToNumber x, Scheme [] (TypeVar tvn))
 -- difference from the 1987 paper, the xs and es are not separated
 -- in our language
 typeCheckLet ::
-  [(TypeVarName, TypeScheme)]
+  TypeEnv
   -> NameSupply
   -> [(Name, VExpr)]
   -> VExpr
   -> Reply (Subst, TypeExpression) [Char]
-typeCheckLet gamma ns xs e =
-  typeCheckLet1 gamma ns0 names e (typeCheckList gamma ns1 es)
+typeCheckLet gamma ns xs expr =
+  typeCheckLet1 gamma ns0 names expr (typeCheckList gamma ns1 es)
   where
     es = map snd xs
     names = map fst xs
@@ -345,16 +344,26 @@ alToSubst al tvn
   | tvn `elem` (dom al) = TypeVar (val al tvn)
   | otherwise           = TypeVar tvn
 
-typeCheckCore :: CoreProgram -> Reply (Subst, [TypeExpression]) String
-typeCheckCore c =
+typeCheckCore' :: TypeEnv -> VExpr-> Reply (Subst, TypeExpression) String
+typeCheckCore' typeEnv expr =
   let
-    translate (name, vars, expr) = expr
-    translatedCore = map translate
-    typeEnv =
-      [ (nameToNumber "square", Scheme [(nameToNumber "x")] (arrow int int))
-      , (nameToNumber "multiply", Scheme [] (arrow int (arrow int int))) ]
+    result = typeCheck typeEnv [0] expr
   in
-    typeCheckList typeEnv [0] $ translatedCore c
+    result
+
+typeCheckCore :: CoreProgram -> Reply (Subst, [TypeExpression]) String
+typeCheckCore (c:cs) =
+  let
+    getExpr (name, vars, expr) = expr
+    result = typeCheck typeEnv [0] (getExpr c)
+    -- TypeEnv :: [(TypeVarName, TypeScheme)]
+    -- env (name, vars, expr) =
+    --   map (\x -> (nameToNumber x, Scheme [] (TypeVar $ nameToNumber x))) vars
+    -- env' = concat $ map env c
+    typeEnv =
+      [ (nameToNumber "multiply", Scheme [] (arrow int (arrow int int))) ]
+  in
+    typeCheckCore' typeEnv $ translatedCore c
 
 -- helper for use with ghci
 runTest' test =

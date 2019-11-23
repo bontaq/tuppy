@@ -48,6 +48,7 @@ spec = do
       runTest
         [ (nameToNumber "multiply"
         , Scheme [] (arrow int (arrow int int))) ]
+        -- "square x = multiply x x ;"
         "square x = multiply x x ; main = square 2 ;"
       `shouldBe`
         ""

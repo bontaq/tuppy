@@ -2,8 +2,6 @@
 
 module Language where
 
-import Data.List (intersperse)
-
 type Name = String
 type IsRec = Bool
 
