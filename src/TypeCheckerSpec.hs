@@ -17,32 +17,33 @@ runTest :: TypeEnv -> String -> String
 runTest typeEnv strProgram =
   let result = typeCheckCore $ syntax $ clex 0 strProgram
   in case result of
-    (Ok (_, t)) -> "Ok: " <> show t
-    (Failure x) -> "Failed: " <> show x
+    t -> show t
+    -- (Ok (_, t)) -> "Ok: " <> show t
+    -- (Failure x) -> "Failed: " <> show x
 
 spec :: Spec
 spec = do
   describe "TypeChecker" $ do
-    it "works for an integer" $ do
-      runTest [] "main = 3 ;"
-      `shouldBe`
-      "Ok: " <> show [int]
-    it "works for a string" $ do
-      runTest [] "main = \"hello\" ;"
-      `shouldBe`
-      "Ok: " <> show [string]
-    it "works for multiply" $ do
-      runTest
-        [(nameToNumber "multiply", Scheme [] (arrow int (arrow int int)))]
-        "main = multiply 3 3 ;"
-      `shouldBe`
-        "Ok: " <> show [int]
-    it "fails for bad multiply" $ do
-      runTest
-        [(nameToNumber "multiply", Scheme [] (arrow int (arrow int int)))]
-        "main = multiply 3 \"x\" ;"
-      `shouldBe`
-        "Failed: \"Ap2 Could not unify: TCN: int TS: [] TCN: string TS: []\""
+    -- it "works for an integer" $ do
+    --   runTest [] "main = 3 ;"
+    --   `shouldBe`
+    --   "Ok: " <> show [int]
+    -- it "works for a string" $ do
+    --   runTest [] "main = \"hello\" ;"
+    --   `shouldBe`
+    --   "Ok: " <> show [string]
+    -- it "works for multiply" $ do
+    --   runTest
+    --     [(nameToNumber "multiply", Scheme [] (arrow int (arrow int int)))]
+    --     "main = multiply 3 3 ;"
+    --   `shouldBe`
+    --     "Ok: " <> show [int]
+    -- it "fails for bad multiply" $ do
+    --   runTest
+    --     [(nameToNumber "multiply", Scheme [] (arrow int (arrow int int)))]
+    --     "main = multiply 3 \"x\" ;"
+    --   `shouldBe`
+    --     "Failed: \"Ap2 Could not unify: TCN: int TS: [] TCN: string TS: []\""
         -- now THAT is one ugly error message
     it "works for multiple lines" $ do
       runTest
