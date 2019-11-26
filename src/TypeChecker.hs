@@ -348,15 +348,14 @@ transformExpr :: CoreScDefn -> VExpr
 transformExpr (_, vars, expr) = foldl (\expr v -> EAp expr (EVar v)) expr vars
 
 -- arrowize :: CoreScDefn ->
-arrowize :: CoreScDefn -> TypeEnv -> TypeEnv
-arrowize (name, vars, _) typeEnv = case length vars of
-  0 -> [(nameToNumber name, typeEnv)]
+arrowize :: CoreScDefn -> Reply (Subst, TypeExpression) b -> TypeEnv
+arrowize (name, vars, _) (Ok (s, t)) = case length vars of
+  0 -> [(nameToNumber name, Scheme [] t)]
   -- (arrow int (arrow int int))
-  _ -> [(nameToNumber name, Scheme [] scheme)]
+  _ -> undefined -- [(nameToNumber name, Scheme [] scheme)]
     where
       numberVars = map nameToNumber vars
-      getTypeExpr = \v -> filter (\(TypeConstructor n _) -> n == v) t
-      scheme = undefined
+      scheme = ((foldr (\v acc -> acc (s v) ) arrow) numberVars) $ t
 
 typeCheckCore' :: TypeEnv -> CoreScDefn -> TypeEnv
 typeCheckCore' te ex | trace ("TE: " <> show te <> " EX: " <> show ex) False = undefined
