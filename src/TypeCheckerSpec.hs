@@ -45,7 +45,16 @@ spec = do
     --   `shouldBe`
     --     "Failed: \"Ap2 Could not unify: TCN: int TS: [] TCN: string TS: []\""
         -- now THAT is one ugly error message
-    it "works for multiple lines" $ do
+
+    -- it "works for multiple lines with a const" $ do
+    --   runTest
+    --     [ (nameToNumber "multiply"
+    --     , Scheme [] (arrow int (arrow int int))) ]
+    --     "test = 1 ; main = multiply test ;"
+    --   `shouldBe`
+    --     "Ap2 Could not unify: TCN: int TS: [] TCN: string TS: [] : could not typecheck"
+
+    it "works for more complicated multiple lines" $ do
       runTest
         [ (nameToNumber "multiply"
         , Scheme [] (arrow int (arrow int int))) ]
@@ -53,3 +62,10 @@ spec = do
         "square x = multiply x x ; main = square 2 ;"
       `shouldBe`
         ""
+    it "works" $ do
+      2 `shouldBe` 2
+  -- describe "transformExpr" $ do
+  --   it "takes free variables and makes them applications" $ do
+  --     transformExpr ("square", ["x"], EAp (EAp (EVar "multiply") (EVar "x")) (EVar "x"))
+  --     `shouldBe`
+  --     EVar "x"

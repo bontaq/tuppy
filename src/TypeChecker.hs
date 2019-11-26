@@ -345,7 +345,18 @@ alToSubst al tvn
   | otherwise           = TypeVar tvn
 
 transformExpr :: CoreScDefn -> VExpr
-transformExpr = undefined
+transformExpr (_, vars, expr) = foldl (\expr v -> EAp expr (EVar v)) expr vars
+
+-- arrowize :: CoreScDefn ->
+arrowize :: CoreScDefn -> TypeEnv -> TypeEnv
+arrowize (name, vars, _) typeEnv = case length vars of
+  0 -> [(nameToNumber name, typeEnv)]
+  -- (arrow int (arrow int int))
+  _ -> [(nameToNumber name, Scheme [] scheme)]
+    where
+      numberVars = map nameToNumber vars
+      getTypeExpr = \v -> filter (\(TypeConstructor n _) -> n == v) t
+      scheme = undefined
 
 typeCheckCore' :: TypeEnv -> CoreScDefn -> TypeEnv
 typeCheckCore' te ex | trace ("TE: " <> show te <> " EX: " <> show ex) False = undefined
@@ -361,14 +372,15 @@ typeCheckCore' typeEnv coreExpr =
          (\var -> (nameToNumber var, Scheme [] (TypeVar $ nameToNumber var)))
          (getVars coreExpr))
 
-    -- 2. transform the module Compiler where
-    expr' = transformExpr expr
-    -- 3. typecheck it
-    result = typeCheck typeEnv' [0] (getExpr expr)
+    -- 2. typecheck it
+    result = typeCheck typeEnv' [0] (getExpr coreExpr)
+
+    -- 3. arrowize the variables and function
+    expr' = arrowize coreExpr result
   in
     -- 4. extend the original typeEnv with the new information or fail
     case result of
-      (Ok (_, t)) -> typeEnv <> [(nameToNumber (getName expr), Scheme [] t)]
+      (Ok (_, t)) -> typeEnv <> [(nameToNumber (getName coreExpr), Scheme [] t)]
       (Failure x) -> error $ x <> " : could not typecheck"
 
 -- typeCheckCore :: CoreProgram -> Reply (Subst, [TypeExpression]) String
