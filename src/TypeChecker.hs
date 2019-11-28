@@ -347,18 +347,32 @@ alToSubst al tvn
 transformExpr :: CoreScDefn -> VExpr
 transformExpr (_, vars, expr) = foldl (\expr v -> EAp expr (EVar v)) expr vars
 
--- arrowize :: CoreScDefn ->
+compose :: Foldable t => t (b -> b) -> b -> b
+compose fs v = foldl (flip (.)) id fs $ v
+
+-- arrowize' :: [TypeExpression] -> TypeExpression
+
 arrowize :: CoreScDefn -> Reply (Subst, TypeExpression) b -> TypeEnv
+arrowize te (Ok (s, t)) | trace ("CoreSC: " <> show te <> " EX: " <> show t) False = undefined
 arrowize (name, vars, _) (Ok (s, t)) = case length vars of
   0 -> [(nameToNumber name, Scheme [] t)]
   -- (arrow int (arrow int int))
-  _ -> undefined -- [(nameToNumber name, Scheme [] scheme)]
+  _ -> [ (nameToNumber name
+        , Scheme [] (arrow firstType t)) ] -- [(nameToNumber name, Scheme [] scheme)]
     where
-      numberVars = map nameToNumber vars
-      scheme = ((foldr (\v acc -> acc (s v) ) arrow) numberVars) $ t
+      first = head vars
+      firstType = s (nameToNumber first)
+      -- numberVars = zip vars $ map nameToNumber vars
+      -- 1. show be number var
+      -- 2. show be arrow
+      -- scheme = arrow int (arrow int int)
+      -- (a:b:c) = fmap (\(name, numName) -> TypeConstructor name $ [s numName]) numberVars
+      -- t = arrow a $ arrow b int
+      -- scheme' = compose [arrow, TypeVar [1], arrow]
+      -- scheme = ((foldr (\v acc -> acc (s v) arrow) arrow) numberVars) $ t
 
 typeCheckCore' :: TypeEnv -> CoreScDefn -> TypeEnv
-typeCheckCore' te ex | trace ("TE: " <> show te <> " EX: " <> show ex) False = undefined
+-- typeCheckCore' te ex | trace ("TE: " <> show te <> " EX: " <> show ex) False = undefined
 typeCheckCore' typeEnv coreExpr =
   let
     getName (name, _, _) = name
@@ -379,7 +393,7 @@ typeCheckCore' typeEnv coreExpr =
   in
     -- 4. extend the original typeEnv with the new information or fail
     case result of
-      (Ok (_, t)) -> typeEnv <> [(nameToNumber (getName coreExpr), Scheme [] t)]
+      (Ok (_, t)) -> typeEnv <> expr'
       (Failure x) -> error $ x <> " : could not typecheck"
 
 -- typeCheckCore :: CoreProgram -> Reply (Subst, [TypeExpression]) String
