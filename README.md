@@ -11,7 +11,7 @@ Main files (in order the file goes during compilation):
 1. https://github.com/bontaq/tuppy/blob/master/src/Parser.hs
 As it says on the tin, it lexes (meaning to break up raw text into a series of words without whitespace or returns and whatnot), then it parses (which means to turn the lexed text into our language).  [This](https://github.com/bontaq/tuppy/blob/master/src/Parser.hs#L193) is the main function there.
 
-2. https://github.com/bontaq/tuppy/blob/master/src/TypeChecker.hs This typechecks the language, and it is of course everyone's favorite type system: [Hindley–Milner](https://en.wikipedia.org/wiki/Hindley%E2%80%93Milner_type_system).  Another note: all the ridiculous gamma phi theta bad variable names were in the original text, so I've left them in but certain am going to change them.
+2. https://github.com/bontaq/tuppy/blob/master/src/TypeChecker.hs This typechecks the language, and it is of course everyone's favorite type system: [Hindley–Milner](https://en.wikipedia.org/wiki/Hindley%E2%80%93Milner_type_system).  Another note: all the ridiculous gamma phi theta bad variable names were in the original text, so I've left them in but certainly am going to change them.
 
 3. https://github.com/bontaq/tuppy/blob/master/src/Compiler.hs Currently incredibly tiny, it turns our language into runnable javascript.
 
