@@ -9,16 +9,15 @@ If you want to start messing with it, [this PR](https://github.com/bontaq/tuppy/
 
 Main files (in order the file goes during compilation):
 1. https://github.com/bontaq/tuppy/blob/master/src/Parser.hs
-
 As it says on the tin, it lexes (meaning to break up raw text into a series of words without whitespace or returns and whatnot), then it parses (which means to turn the lexed text into our language).  [This](https://github.com/bontaq/tuppy/blob/master/src/Parser.hs#L193) is the main function there.
 
-2. https://github.com/bontaq/tuppy/blob/master/src/TypeChecker.hs
+2. https://github.com/bontaq/tuppy/blob/master/src/TypeChecker.hs This typechecks the language, and it is of course everyone's favorite type system: [Hindley–Milner](https://en.wikipedia.org/wiki/Hindley%E2%80%93Milner_type_system).  Another note: all the ridiculous gamma phi theta bad variable names were in the original text, so I've left them in but certain am going to change them.
 
-This typechecks the language, and it is of course everyone's favorite type system: [Hindley–Milner](https://en.wikipedia.org/wiki/Hindley%E2%80%93Milner_type_system).  Another note: all the ridiculous gamma phi theta bad variable names were in the original text, so I've left them in but certain am going to change them.
+3. https://github.com/bontaq/tuppy/blob/master/src/Compiler.hs Currently incredibly tiny, it turns our language into runnable javascript.
 
-3. https://github.com/bontaq/tuppy/blob/master/src/Compiler.hs
+### What puts it all together?
+https://github.com/bontaq/tuppy/blob/master/app/Main.hs#L36 
 
-Currently incredibly tiny, it turns our language into runnable javascript.
 
 ### Hey what's the core language look like?
 ```
@@ -41,6 +40,8 @@ square x = multiply x x ;
 
 main = square 2 ;
 ```
+https://github.com/bontaq/tuppy/blob/master/examples/test3.tp
+
 
 ### Things to do
 
@@ -60,6 +61,9 @@ main = square 2 ;
 
 - To pretty much become [Svelte](https://svelte.dev/) but statically radically typed
 
+
 ### Installation
 
 You'll need [stack](https://docs.haskellstack.org/en/stable/README/) installed.  Then, it's easy as `stack install` and you can use it to produce Javascript like: `tuppy-exe -cf example.ts`.
+
+To run the tests (all the Spec files), just do `stack test`
