@@ -64,6 +64,6 @@ https://github.com/bontaq/tuppy/blob/master/examples/test3.tp
 
 ### Installation
 
-You'll need [stack](https://docs.haskellstack.org/en/stable/README/) installed.  Then, it's easy as `stack install` and you can use it to produce Javascript like: `tuppy-exe -cf example.ts`.  Stack might install it somewhere else, or you might not have its install location in your path, so make sure to check the output from `stack install`.
+You'll need [stack](https://docs.haskellstack.org/en/stable/README/) installed.  Then, it's easy as `stack install` and you can use it to produce Javascript like: `tuppy-exe -cf example.tp`.  Stack might install it somewhere else, or you might not have its install location in your path, so make sure to check the output from `stack install`.
 
 To run the tests (all the Spec files), just do `stack test`
