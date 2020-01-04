@@ -41,25 +41,27 @@ isTwoCharOp s = s `elem` twoCharOps
 
 -- integer can be ignored, could eventually be the current offset
 -- for now it just means put a 0 in args
-type Token = (Integer, String)
+type Offset = Integer
+type Indent = Integer
+type Token = (Offset, Indent, String)
 
-clex :: Integer -> String -> [Token]
+clex :: Offset -> String -> [Token]
 
-clex n (c:cs) | isQuote c = [(n, "\""), stringToken, (n, "\"")] <> (clex n restCs)
+clex n (c:cs) | isQuote c = [(n, 0, "\""), stringToken, (n, 0, "\"")] <> (clex n restCs)
   where
-    stringToken = (,) n $ takeWhile (not . isQuote) cs
+    stringToken = (,,) n 0 $ takeWhile (not . isQuote) cs
     restCs = drop 1 $ dropWhile (not . isQuote) cs
 
 clex n (c:cs) | isSpace c = clex n cs
 
 clex n (c:cs) | isDigit c = numToken : (clex n restCs)
   where
-    numToken = (,) n $ c : takeWhile isDigit cs
+    numToken = (,,) n 0 $ c : takeWhile isDigit cs
     restCs = dropWhile isDigit cs
 
 clex n (c:cs) | isAlpha c = varToken : clex n restCs
   where
-    varToken = (,) n $ c : takeWhile isIdChar cs
+    varToken = (,,) n 0 $ c : takeWhile isIdChar cs
     restCs = dropWhile isIdChar cs
 
 clex n (c:d:cs) | isComment [c,d] = clex n restCs
@@ -69,10 +71,10 @@ clex n (c:d:cs) | isComment [c,d] = clex n restCs
 
 clex n (c:d:cs) | isTwoCharOp [c,d] = opToken : clex n restCs
   where
-    opToken = (,) n $ [c,d]
+    opToken = (,,) n 0 $ [c,d]
     restCs = cs
 
-clex n (c:cs) = (n, [c]) : clex n cs
+clex n (c:cs) = (n, 0, [c]) : clex n cs
 
 clex n [] = []
 
@@ -153,7 +155,7 @@ pOneOrMoreWithSep p pSep =
 
 -- pSatisfies
 pSat :: (String -> Bool) -> Parser String
-pSat f ((n, tok) : toks) =
+pSat f ((n, _, tok) : toks) =
   case f tok of
     True -> [(tok, toks)]
     False -> []
@@ -217,7 +219,8 @@ pSc :: Parser (Name, [Name], CoreExpr)
 pSc = pThen4 mkSc pVar (pZeroOrMore pVar) (pLit "=") pExpr
 
 pProgram :: Parser CoreProgram
-pProgram = pOneOrMoreWithSep pSc (pLit ";")
+-- pProgram = pOneOrMoreWithSep pSc (pLit "\n")
+pProgram = pOneOrMore pSc
 
 syntax :: [Token] -> CoreProgram
 syntax toks = takeFirstParse . pProgram $ toks
