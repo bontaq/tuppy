@@ -1,8 +1,15 @@
 * Fri 03 Jan 2020 10:39:48 PM EST
 ** Typechecking for multiple variable supercombinators
+** Use a set or map for the type env
+** Check generics work
+** Better string parsing
+** Remove ending with a semicolon
+** Check javascript generation / improve tests
+** Start on Agda-esque type classes
+** Think about how to rely on typescript types for adding libraries
 * Sat 09 Nov 2019 11:45:35 AM EST
 ** DONE Move tests into proper test files
 ** DONE fix let ... in statement in compiler
-** Typecheck multi-line files (get examples/test3 working)
+** DONE Typecheck multi-line files (get examples/test3 working)
 * Sun 20 Oct 2019 12:46:44 PM EDT
-** I guess get it turning into javascript so you can run it?
+** DONE I guess get it turning into javascript so you can run it?
