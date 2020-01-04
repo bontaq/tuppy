@@ -17,6 +17,9 @@ isIdChar c = isAlpha c || isDigit c || (c == '_')
 isWhiteSpace :: Char -> Bool
 isWhiteSpace c = c `elem` [' ', '\n', '\t']
 
+isQuote :: Char -> Bool
+isQuote c = c == '"'
+
 isEndOfLine :: Char -> Bool
 isEndOfLine c = c == '\n'
 
@@ -41,6 +44,11 @@ isTwoCharOp s = s `elem` twoCharOps
 type Token = (Integer, String)
 
 clex :: Integer -> String -> [Token]
+
+clex n (c:cs) | isQuote c = [(n, "\""), stringToken, (n, "\"")] <> (clex n restCs)
+  where
+    stringToken = (,) n $ takeWhile (not . isQuote) cs
+    restCs = drop 1 $ dropWhile (not . isQuote) cs
 
 clex n (c:cs) | isSpace c = clex n cs
 

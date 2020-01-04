@@ -28,6 +28,11 @@ spec = do
       `shouldBe`
       []
 
+    it "lexes a string as a single token" $ do
+      clex 0 "\"hello world\""
+      `shouldBe`
+      [(0, "\""), (0, "hello world"), (0, "\"")]
+
     it "works for a larger example" $ do
       clex 0 [r|
                a x = 1 ;
@@ -131,3 +136,7 @@ spec = do
     it "can parse a string" $ do
       let toks = clex 0 "main = \"hello\" ;"
       syntax toks `shouldBe` [("main", [], EStr "hello")]
+
+    it "can parse a string with spaces" $ do
+      let toks = clex 0 "main = \"hello world!\" ;"
+      syntax toks `shouldBe` [("main", [], EStr "hello world!")]

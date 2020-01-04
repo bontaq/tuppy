@@ -2,7 +2,7 @@
 ** Typechecking for multiple variable supercombinators
 ** Use a set or map for the type env
 ** Check generics work
-** Better string parsing
+** DONE Better string parsing
 ** Remove ending with a semicolon
 ** Check javascript generation / improve tests
 ** Start on Agda-esque type classes
