@@ -350,8 +350,6 @@ transformExpr (_, vars, expr) = foldl (\expr v -> EAp expr (EVar v)) expr vars
 compose :: Foldable t => t (b -> b) -> b -> b
 compose fs v = foldl (flip (.)) id fs $ v
 
--- arrowize' :: [TypeExpression] -> TypeExpression
-
 arrowize :: CoreScDefn -> Reply (Subst, TypeExpression) b -> TypeEnv
 arrowize te (Ok (s, t)) | trace ("CoreSC: " <> show te <> " EX: " <> show t) False = undefined
 arrowize (name, vars, _) (Ok (s, t)) = case length vars of
@@ -362,16 +360,8 @@ arrowize (name, vars, _) (Ok (s, t)) = case length vars of
     where
       first = head vars
       firstType = s (nameToNumber first)
-      -- numberVars = zip vars $ map nameToNumber vars
-      -- 1. show be number var
-      -- 2. show be arrow
-      -- scheme = arrow int (arrow int int)
-      -- (a:b:c) = fmap (\(name, numName) -> TypeConstructor name $ [s numName]) numberVars
-      -- t = arrow a $ arrow b int
-      -- scheme' = compose [arrow, TypeVar [1], arrow]
-      -- scheme = ((foldr (\v acc -> acc (s v) arrow) arrow) numberVars) $ t
 
-typeCheckCore' :: TypeEnv -> CoreScDefn -> TypeEnv
+typeCheckCore' :: TypeEnv -> CoreScDefn -> Reply TypeEnv String
 -- typeCheckCore' te ex | trace ("TE: " <> show te <> " EX: " <> show ex) False = undefined
 typeCheckCore' typeEnv coreExpr =
   let
@@ -393,16 +383,19 @@ typeCheckCore' typeEnv coreExpr =
   in
     -- 4. extend the original typeEnv with the new information or fail
     case result of
-      (Ok (_, t)) -> typeEnv <> expr'
-      (Failure x) -> error $ x <> " : could not typecheck"
+      (Ok (_, t)) -> Ok $ typeEnv <> expr'
+      (Failure x) -> Failure $ x <> " : could not typecheck"
 
--- typeCheckCore :: CoreProgram -> Reply (Subst, [TypeExpression]) String
-typeCheckCore cp =
-  let
-    typeEnv =
-      [ (nameToNumber "multiply", Scheme [] (arrow int (arrow int int))) ]
-  in
-    foldl (\a sc -> a <> (typeCheckCore' a sc)) typeEnv cp
+typeCheckCore :: Foldable t => t CoreScDefn -> TypeEnv -> Reply TypeEnv String
+typeCheckCore cp typeEnv =
+    foldl (\typeEnv' superCombinator ->
+            case typeEnv' of
+              Ok te ->
+                case (typeCheckCore' te superCombinator) of
+                  Ok t -> Ok $ te <> t
+                  Failure f -> Failure f
+              Failure f -> Failure f
+          ) (Ok typeEnv) cp
 
 -- helper for use with ghci
 runTest' test =
