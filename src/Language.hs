@@ -2,14 +2,11 @@
 
 module Language where
 
-import Data.List (intersperse)
-
 type Name = String
 type IsRec = Bool
 
 type Alter a = (Int, [a], Expr a)
 type CoreAlt = Alter Name
-
 
 data Expr a
   = EVar Name             -- Variables

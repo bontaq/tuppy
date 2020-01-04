@@ -22,7 +22,6 @@ data TypeExpression = TypeVar TypeVarName
 -- and we're saying "if we apply these subtitutions,
 -- the equations will be solved"
 
-
 -- represent a transformation from t1 to t2
 arrow :: TypeExpression -> TypeExpression -> TypeExpression
 arrow t1 t2 = TypeConstructor "arrow" [t1, t2]
@@ -162,10 +161,10 @@ type NameSupply = TypeVarName
 
 nextName ns = ns
 
-deplete :: [Int] -> [Int]
+deplete :: NameSupply -> NameSupply
 deplete (n:ns) = (n+2:ns)
 
-split :: [Int] -> ([Int], [Int])
+split :: NameSupply -> (NameSupply, NameSupply)
 split ns = (0:ns, 1:ns)
 
 nameSequence :: NameSupply -> [TypeVarName]
@@ -226,10 +225,13 @@ newBVar (x, tvn) = (nameToNumber x, Scheme [] (TypeVar tvn))
 -- difference from the 1987 paper, the xs and es are not separated
 -- in our language
 typeCheckLet ::
-  [(TypeVarName, TypeScheme)]
-  -> [Int] -> [(Name, VExpr)] -> VExpr -> Reply (Subst, TypeExpression) [Char]
-typeCheckLet gamma ns xs e =
-  typeCheckLet1 gamma ns0 names e (typeCheckList gamma ns1 es)
+  TypeEnv
+  -> NameSupply
+  -> [(Name, VExpr)]
+  -> VExpr
+  -> Reply (Subst, TypeExpression) [Char]
+typeCheckLet gamma ns xs expr =
+  typeCheckLet1 gamma ns0 names expr (typeCheckList gamma ns1 es)
   where
     es = map snd xs
     names = map fst xs
@@ -258,7 +260,7 @@ addDeclarations gamma ns xs ts =
     unknowns = unknownTypeEnv gamma
     schemes = map (genBar unknowns ns) ts
 
-genBar :: [TypeVarName] -> [Int] -> TypeExpression -> TypeScheme
+genBar :: [TypeVarName] -> NameSupply -> TypeExpression -> TypeScheme
 genBar unknowns ns t =
   Scheme (map snd al) t'
   where
@@ -318,8 +320,8 @@ numberToName =
     map (\x -> fromJust $ lookup x charLookup)
 
 typeCheckVar ::
-  [([Int], TypeScheme)]
-  -> [Int] -> [Char] -> Reply (Subst, TypeExpression) b
+  [(TypeVarName, TypeScheme)]
+  -> NameSupply -> [Char] -> Reply (Subst, TypeExpression) b
 typeCheckVar gamma ns x =
   Ok (idSubstitution, newInstance ns scheme)
   where
@@ -331,7 +333,7 @@ typeCheckVar gamma ns x =
 
 typeCheckNum ::
   (Show a, Show b, Eq a) =>
-  [(a, TypeScheme)] -> [Int] -> Int -> Reply (Subst, TypeExpression) b
+  [(a, TypeScheme)] -> NameSupply -> Int -> Reply (Subst, TypeExpression) b
 typeCheckNum gamma ns x =
   Ok (idSubstitution, int)
 
@@ -342,16 +344,58 @@ alToSubst al tvn
   | tvn `elem` (dom al) = TypeVar (val al tvn)
   | otherwise           = TypeVar tvn
 
-typeCheckCore :: CoreProgram -> Reply (Subst, [TypeExpression]) String
-typeCheckCore c =
+transformExpr :: CoreScDefn -> VExpr
+transformExpr (_, vars, expr) = foldl (\expr v -> EAp expr (EVar v)) expr vars
+
+compose :: Foldable t => t (b -> b) -> b -> b
+compose fs v = foldl (flip (.)) id fs $ v
+
+arrowize :: CoreScDefn -> Reply (Subst, TypeExpression) b -> TypeEnv
+arrowize te (Ok (s, t)) | trace ("CoreSC: " <> show te <> " EX: " <> show t) False = undefined
+arrowize (name, vars, _) (Ok (s, t)) = case length vars of
+  0 -> [(nameToNumber name, Scheme [] t)]
+  -- (arrow int (arrow int int))
+  _ -> [ (nameToNumber name
+        , Scheme [] (arrow firstType t)) ] -- [(nameToNumber name, Scheme [] scheme)]
+    where
+      first = head vars
+      firstType = s (nameToNumber first)
+
+typeCheckCore' :: TypeEnv -> CoreScDefn -> Reply TypeEnv String
+-- typeCheckCore' te ex | trace ("TE: " <> show te <> " EX: " <> show ex) False = undefined
+typeCheckCore' typeEnv coreExpr =
   let
-    translate (name, vars, expr) = expr
-    translatedCore = map translate
-    typeEnv =
-      [ (nameToNumber "square", Scheme [(nameToNumber "x")] (arrow int int))
-      , (nameToNumber "multiply", Scheme [] (arrow int (arrow int int))) ]
+    getName (name, _, _) = name
+    getVars (_, vars, _) = vars
+    getExpr (_, _, expr) = expr
+
+    -- 1. update the type env with vars
+    typeEnv' = typeEnv
+      <> (map
+         (\var -> (nameToNumber var, Scheme [] (TypeVar $ nameToNumber var)))
+         (getVars coreExpr))
+
+    -- 2. typecheck it
+    result = typeCheck typeEnv' [0] (getExpr coreExpr)
+
+    -- 3. arrowize the variables and function
+    expr' = arrowize coreExpr result
   in
-    typeCheckList typeEnv [0] $ translatedCore c
+    -- 4. extend the original typeEnv with the new information or fail
+    case result of
+      (Ok (_, t)) -> Ok $ typeEnv <> expr'
+      (Failure x) -> Failure $ x <> " : could not typecheck"
+
+typeCheckCore :: Foldable t => t CoreScDefn -> TypeEnv -> Reply TypeEnv String
+typeCheckCore cp typeEnv =
+    foldl (\typeEnv' superCombinator ->
+            case typeEnv' of
+              Ok te ->
+                case (typeCheckCore' te superCombinator) of
+                  Ok t -> Ok $ te <> t
+                  Failure f -> Failure f
+              Failure f -> Failure f
+          ) (Ok typeEnv) cp
 
 -- helper for use with ghci
 runTest' test =

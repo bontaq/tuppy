@@ -36,10 +36,10 @@ main = run =<< execParser opts
 handleCompile :: String -> String
 handleCompile f =
   let syntax' = syntax . (clex 0) $ f
-      tcResult = typeCheckCore syntax'
+      tcResult = typeCheckCore syntax' []
   in
     case tcResult of
-      (Ok (_, _)) -> Compiler.compile syntax'
+      (Ok (_)) -> Compiler.compile syntax'
       (Failure x) -> x
 
 replaceEnding :: [Char] -> [Char]
