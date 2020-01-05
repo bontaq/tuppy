@@ -2,11 +2,12 @@
 ** Typechecking for multiple variable supercombinators
 ** Use a set or map for the type env
 ** Check generics work
-** Better string parsing
-** Remove ending with a semicolon
+** DONE Better string parsing
+** DONE Remove ending with a semicolon
 ** Check javascript generation / improve tests
 ** Start on Agda-esque type classes
 ** Think about how to rely on typescript types for adding libraries
+** REPL that works on a page with a "watch" fn
 * Sat 09 Nov 2019 11:45:35 AM EST
 ** DONE Move tests into proper test files
 ** DONE fix let ... in statement in compiler

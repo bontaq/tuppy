@@ -14,8 +14,8 @@ import Debug.Trace
 isIdChar  :: Char -> Bool
 isIdChar c = isAlpha c || isDigit c || (c == '_')
 
-isWhiteSpace :: Char -> Bool
-isWhiteSpace c = c `elem` [' ', '\n', '\t']
+isQuote :: Char -> Bool
+isQuote c = c == '"'
 
 isEndOfLine :: Char -> Bool
 isEndOfLine c = c == '\n'
@@ -38,35 +38,43 @@ isTwoCharOp s = s `elem` twoCharOps
 
 -- integer can be ignored, could eventually be the current offset
 -- for now it just means put a 0 in args
-type Token = (Integer, String)
+type Offset = Integer
+type Indent = Integer
+type Token = (Offset, Indent, String)
 
-clex :: Integer -> String -> [Token]
+clex :: Offset -> Indent -> String -> [Token]
 
-clex n (c:cs) | isSpace c = clex n cs
-
-clex n (c:cs) | isDigit c = numToken : (clex n restCs)
+clex n o (c:cs) | isQuote c = [(n, o, "\""), stringToken, (n, o, "\"")] <> (clex n o restCs)
   where
-    numToken = (,) n $ c : takeWhile isDigit cs
+    stringToken = (,,) n o $ takeWhile (not . isQuote) cs
+    restCs = drop 1 $ dropWhile (not . isQuote) cs
+
+clex n o (c:d:cs) | isEndOfLine c && (not . isSpace) d = clex 0 0 (d:cs)
+
+clex n o (c:cs) | isSpace c = clex n 1 cs
+
+clex n o (c:cs) | isDigit c = numToken : (clex n o restCs)
+  where
+    numToken = (,,) n o $ c : takeWhile isDigit cs
     restCs = dropWhile isDigit cs
 
-clex n (c:cs) | isAlpha c = varToken : clex n restCs
+clex n o (c:cs) | isAlpha c = varToken : clex n o restCs
   where
-    varToken = (,) n $ c : takeWhile isIdChar cs
+    varToken = (,,) n o $ c : takeWhile isIdChar cs
     restCs = dropWhile isIdChar cs
 
-clex n (c:d:cs) | isComment [c,d] = clex n restCs
+clex n o (c:d:cs) | isComment [c,d] = clex n o restCs
   where
-    -- comToken = (,) n $ takeWhile (not . isEndOfLine) cs
     restCs = dropWhile (not . isEndOfLine) cs
 
-clex n (c:d:cs) | isTwoCharOp [c,d] = opToken : clex n restCs
+clex n o (c:d:cs) | isTwoCharOp [c,d] = opToken : clex n o restCs
   where
-    opToken = (,) n $ [c,d]
+    opToken = (,,) n o $ [c,d]
     restCs = cs
 
-clex n (c:cs) = (n, [c]) : clex n cs
+clex n o (c:cs) = (n, o, [c]) : clex n o cs
 
-clex n [] = []
+clex n o [] = []
 
 --
 -- parse (library / utilities section)
@@ -89,7 +97,6 @@ pNum = pApply (pSat (all isDigit)) (\c -> read c :: Int)
 
 pEmpty :: a -> Parser a
 pEmpty p toks = [(p, toks)]
-
 
 -- combining two parsers, returns whichever matched
 pAlt :: Parser a -> Parser a -> Parser a
@@ -145,12 +152,18 @@ pOneOrMoreWithSep p pSep =
 
 -- pSatisfies
 pSat :: (String -> Bool) -> Parser String
-pSat f ((n, tok) : toks) =
+pSat f ((n, _, tok) : toks) =
   case f tok of
     True -> [(tok, toks)]
     False -> []
 pSat _ _ = []
 
+pIndent :: a -> Parser a
+pIndent p (tok@(_, indent, _) : toks) =
+  case indent of
+    0 -> [(p, tok:toks)]
+    _ -> []
+pIndent p toks = [(p, toks)]
 
 mkApChain :: [CoreExpr] -> CoreExpr
 mkApChain (e:es) = foldl EAp e es
@@ -208,8 +221,21 @@ mkSc name vars eq expr = (name, vars, expr)
 pSc :: Parser (Name, [Name], CoreExpr)
 pSc = pThen4 mkSc pVar (pZeroOrMore pVar) (pLit "=") pExpr
 
+scs :: [Token] -> [[Token]]
+scs [] = []
+scs (h:toks) =
+  let
+    sc = takeWhile (\(_, indent, _) -> indent /= 0) toks
+    rest = drop (length sc) toks
+  in
+    (h:sc) : (scs rest)
+
+-- type Parser a = [Token] -> [(a, [Token])]
+-- type ScDefn a = (Name, [a], Expr a)
+-- type Program a = [ScDefn a]
+-- type CoreProgram = Program Name
 pProgram :: Parser CoreProgram
-pProgram = pOneOrMoreWithSep pSc (pLit ";")
+pProgram = pOneOrMoreWithSep pSc $ pIndent []
 
 syntax :: [Token] -> CoreProgram
 syntax toks = takeFirstParse . pProgram $ toks
