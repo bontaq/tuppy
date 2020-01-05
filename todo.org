@@ -3,8 +3,7 @@
 ** Use a set or map for the type env
 ** Check generics work
 ** DONE Better string parsing
-** Remove ending with a semicolon
-   It looks like I'll need to track indentation but how
+** DONE Remove ending with a semicolon
 ** Check javascript generation / improve tests
 ** Start on Agda-esque type classes
 ** Think about how to rely on typescript types for adding libraries
