@@ -35,7 +35,7 @@ main = run =<< execParser opts
 
 handleCompile :: String -> String
 handleCompile f =
-  let syntax' = syntax . (clex 0) $ f
+  let syntax' = syntax . (clex 0 0) $ f
       tcResult = typeCheckCore syntax' []
   in
     case tcResult of
@@ -72,10 +72,10 @@ replCompile fp = do
 replSyntax :: String -> IO ()
 replSyntax fp = do
   f <- readFile fp
-  putStrLn $ show . syntax . (clex 0) $ f
+  putStrLn $ show . syntax . (clex 0 0) $ f
 
 -- compile, but skip typechecking
 replCompileNoTC :: String -> IO ()
 replCompileNoTC fp = do
   f <- readFile fp
-  putStrLn $ show . Compiler.compile . syntax . (clex 0) $ f
+  putStrLn $ show . Compiler.compile . syntax . (clex 0 0) $ f
