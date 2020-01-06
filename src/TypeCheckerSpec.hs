@@ -66,7 +66,7 @@ spec = do
     it "works for generics" $ do
       runTest
         []
-        "id x = x \ntest = id 1"
+        "id x = x \ntest = id 1\ntest2 = id 2"
       `shouldBe`
         "Ok: [(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"test\",Scheme [] (TypeConstructor \"int\" []))]"
 
