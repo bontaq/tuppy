@@ -15,7 +15,7 @@ translatedCore = map translate
 
 runTest :: TypeEnv -> String -> String
 runTest typeEnv strProgram =
-  let result = (flip typeCheckCore) typeEnv $ syntax $ clex 0 strProgram
+  let result = (flip typeCheckCore) typeEnv $ syntax $ clex 0 0 strProgram
 
   in case result of
     -- t -> show t
@@ -26,23 +26,23 @@ spec :: Spec
 spec = do
   describe "TypeChecker" $ do
     it "works for an integer" $ do
-      runTest [] "main = 3 ;"
+      runTest [] "main = 3"
       `shouldBe`
       "Ok: [(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
     it "works for a string" $ do
-      runTest [] "main = \"hello\" ;"
+      runTest [] "main = \"hello\""
       `shouldBe`
       "Ok: [(\"main\",Scheme [] (TypeConstructor \"string\" []))]"
     it "works for multiply" $ do
       runTest
         [(nameToNumber "multiply", Scheme [] (arrow int (arrow int int)))]
-        "main = multiply 3 3 ;"
+        "main = multiply 3 3"
       `shouldBe`
       "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
     it "fails for bad multiply" $ do
       runTest
         [(nameToNumber "multiply", Scheme [] (arrow int (arrow int int)))]
-        "main = multiply 3 \"x\" ;"
+        "main = multiply 3 \"x\""
       `shouldBe`
         "Failed: \"Ap2 Could not unify: TCN: int TS: [] TCN: string TS: [] : could not typecheck\""
         -- now THAT is one ugly error message
@@ -51,7 +51,7 @@ spec = do
       runTest
         [ (nameToNumber "multiply"
         , Scheme [] (arrow int (arrow int int))) ]
-        "test = 1 ; main = multiply test ;"
+        "test = 1 \nmain = multiply test"
       `shouldBe`
         "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"test\",Scheme [] (TypeConstructor \"int\" [])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"test\",Scheme [] (TypeConstructor \"int\" [])),(\"main\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]))]"
 
@@ -59,9 +59,16 @@ spec = do
       runTest
         [ (nameToNumber "multiply"
         , Scheme [] (arrow int (arrow int int))) ]
-        "square x = multiply x x ; main = square 2 ;"
+        "square x = multiply x x\nmain = square 2"
       `shouldBe`
         "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"square\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"square\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []])),(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
+
+    it "works for generics" $ do
+      runTest
+        []
+        "id x = x \ntest = id 1"
+      `shouldBe`
+        "Ok: [(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"test\",Scheme [] (TypeConstructor \"int\" []))]"
 
   describe "transformExpr" $ do
     it "takes free variables and makes them applications" $ do
