@@ -35,6 +35,7 @@ compileExpr (ELet recursive vars expr) =
     handleVar (name, expr) = "var " <> name <> " =" <> compileExpr expr <> ";"
 
 compileExpr (ENum n) = show n
+compileExpr e = error $ show e
 
 -- I hate to special case let like this, but seems necessary otherwise
 -- there's too many returns

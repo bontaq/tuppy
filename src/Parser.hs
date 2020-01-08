@@ -177,7 +177,6 @@ keywords = ["let", "letrec", "case", "in", "of", "Pack", "="]
 pVar :: Parser String
 pVar = pSat (not . (flip elem) keywords)
 
--- TODO: multiple words
 pStr :: Parser CoreExpr
 pStr = pThen3 mkStr (pLit "\"") pVar (pLit "\"")
   where
@@ -186,15 +185,16 @@ pStr = pThen3 mkStr (pLit "\"") pVar (pLit "\"")
 pExpr :: Parser CoreExpr
 pExpr = pApply (pOneOrMore pAexpr) mkApChain
 
-pIns :: Parser [(String, CoreExpr)]
-pIns = pOneOrMore (pThen3 mkIn pVar (pLit "=") pExpr)
+pIns :: Parser [([String], CoreExpr)]
+pIns = pOneOrMore (pThen3 mkIn (pOneOrMore pVar) (pLit "=") pExpr)
   where
     mkIn v _ e = (v, e)
 
 pLet :: Parser CoreExpr
 pLet = pThen4 mkLet (pLit "let") pIns (pLit "in") pExpr
   where
-    mkLet _ vs _ e = ELet False vs e
+    mkFn ((name:vars), expr) = (name, ELam vars expr)
+    mkLet _ fns _ e = ELet False (fmap mkFn fns) e
 
 pLambda :: Parser CoreExpr
 pLambda = pThen4 mkLambda (pLit "\\") (pOneOrMore pVar) (pLit "->") pExpr

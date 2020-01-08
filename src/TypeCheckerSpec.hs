@@ -66,9 +66,16 @@ spec = do
     it "works for generics" $ do
       runTest
         []
-        "id x = x \ntest = id 1\ntest2 = id 2"
+        "id x = x \ntesta = id 1\ntestb = id 2"
       `shouldBe`
-        "Ok: [(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"test\",Scheme [] (TypeConstructor \"int\" []))]"
+        "Ok: [(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"testa\",Scheme [] (TypeConstructor \"int\" [])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"testa\",Scheme [] (TypeConstructor \"int\" [])),(\"testb\",Scheme [] (TypeConstructor \"int\" []))]"
+
+    it "works for generics in a let" $ do
+      runTest
+        []
+        "main = let id x = x in id 1"
+      `shouldBe`
+        "Ok: [(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
 
   describe "transformExpr" $ do
     it "takes free variables and makes them applications" $ do

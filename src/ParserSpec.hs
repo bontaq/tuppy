@@ -130,9 +130,15 @@ main y = square y
       let toks = clex 0 0 "main = let x = 0 in x"
       syntax toks
       `shouldBe`
-      [("main", [], ELet False [("x", ENum 0)] (EVar "x"))]
+      [("main", [], ELet False [("x", ELam [] (ENum 0))] (EVar "x"))]
       -- False here means non-recursive, which is for future
       -- implementation
+
+    it "can parse a let where some fns have arguments" $ do
+      let toks = clex 0 0 "main = let f x = x in f 1"
+      syntax toks
+      `shouldBe`
+      [("main",[],ELet False [("f",ELam ["x"] (EVar "x"))] (EAp (EVar "f") (ENum 1)))]
 
     it "can parse a lambda expresion" $ do
       let toks = clex 0 0 "main = \\x -> x"

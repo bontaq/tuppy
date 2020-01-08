@@ -309,7 +309,7 @@ fromJust _ = error "could not find"
 
 nameToNumber :: [Char] -> [Int]
 nameToNumber =
-  let numLookup = zip ['a'..'z'] [0..]
+  let numLookup = zip (['a'..'z'] <> ['A'..'Z']) [0..]
   in
     map (\x -> fromJust $ lookup x numLookup)
 
