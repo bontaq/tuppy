@@ -35,7 +35,14 @@ compileExpr (ELet recursive vars expr) =
     handleVar (name, expr) = "var " <> name <> " =" <> compileExpr expr <> ";"
 
 compileExpr (ENum n) = show n
-compileExpr e = error $ show e
+compileExpr (ELam vars expr) =
+  "(function ("
+  <> handledVars
+  <> ") { return "
+  <> compileExpr expr
+  <> " })(" <> handledVars <> ")"
+  where
+    handledVars = intersperse "," vars
 
 -- I hate to special case let like this, but seems necessary otherwise
 -- there's too many returns
