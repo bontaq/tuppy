@@ -36,9 +36,9 @@ https://github.com/bontaq/tuppy/blob/master/src/Language.hs#L14
 
 ### Hey what's the language itself look like?
 ```
-square x = multiply x x ;
+square x = multiply x x
 
-main = square 2 ;
+main = square 2
 ```
 https://github.com/bontaq/tuppy/blob/master/examples/test3.tp
 
