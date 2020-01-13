@@ -77,6 +77,13 @@ spec = do
       `shouldBe`
         "Ok: [(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
 
+    it "works for double application" $ do
+      runTest
+        []
+        "main = let id x = x in id id \"hello world\""
+      `shouldBe`
+        "Ok: [(\"main\",Scheme [] (TypeConstructor \"string\" []))]"
+
   describe "transformExpr" $ do
     it "takes free variables and makes them applications" $ do
       transformExpr ("square", ["x"], EAp (EAp (EVar "multiply") (EVar "x")) (EVar "x"))
