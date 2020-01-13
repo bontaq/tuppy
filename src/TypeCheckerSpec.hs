@@ -84,6 +84,20 @@ spec = do
       `shouldBe`
         "Ok: [(\"main\",Scheme [] (TypeConstructor \"string\" []))]"
 
+    it "works for application" $ do
+      runTest
+        []
+        "apply f g = f g\nid x = x\ntesting = apply id 1"
+      `shouldBe`
+       "Ok"
+
+    it "works for id" $ do
+      runTest
+        []
+        "id x = x\nmain = id 1"
+      `shouldBe`
+        "Ok"
+
   describe "transformExpr" $ do
     it "takes free variables and makes them applications" $ do
       transformExpr ("square", ["x"], EAp (EAp (EVar "multiply") (EVar "x")) (EVar "x"))
