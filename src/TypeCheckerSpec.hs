@@ -25,57 +25,57 @@ runTest typeEnv strProgram =
 spec :: Spec
 spec = do
   describe "TypeChecker" $ do
-    it "works for an integer" $ do
-      runTest [] "main = 3"
-      `shouldBe`
-      "Ok: [(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
-    it "works for a string" $ do
-      runTest [] "main = \"hello\""
-      `shouldBe`
-      "Ok: [(\"main\",Scheme [] (TypeConstructor \"string\" []))]"
-    it "works for multiply" $ do
-      runTest
-        [(nameToNumber "multiply", Scheme [] (arrow int (arrow int int)))]
-        "main = multiply 3 3"
-      `shouldBe`
-      "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
-    it "fails for bad multiply" $ do
-      runTest
-        [(nameToNumber "multiply", Scheme [] (arrow int (arrow int int)))]
-        "main = multiply 3 \"x\""
-      `shouldBe`
-        "Failed: \"Ap2 Could not unify: TCN: int TS: [] TCN: string TS: [] : could not typecheck\""
-        -- now THAT is one ugly error message
+    -- it "works for an integer" $ do
+    --   runTest [] "main = 3"
+    --   `shouldBe`
+    --   "Ok: [(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
+    -- it "works for a string" $ do
+    --   runTest [] "main = \"hello\""
+    --   `shouldBe`
+    --   "Ok: [(\"main\",Scheme [] (TypeConstructor \"string\" []))]"
+    -- it "works for multiply" $ do
+    --   runTest
+    --     [(nameToNumber "multiply", Scheme [] (arrow int (arrow int int)))]
+    --     "main = multiply 3 3"
+    --   `shouldBe`
+    --   "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
+    -- it "fails for bad multiply" $ do
+    --   runTest
+    --     [(nameToNumber "multiply", Scheme [] (arrow int (arrow int int)))]
+    --     "main = multiply 3 \"x\""
+    --   `shouldBe`
+    --     "Failed: \"Ap2 Could not unify: TCN: int TS: [] TCN: string TS: [] : could not typecheck\""
+    --     -- now THAT is one ugly error message
 
-    it "works for multiple lines with a const" $ do
-      runTest
-        [ (nameToNumber "multiply"
-        , Scheme [] (arrow int (arrow int int))) ]
-        "test = 1 \nmain = multiply test"
-      `shouldBe`
-        "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"test\",Scheme [] (TypeConstructor \"int\" [])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"test\",Scheme [] (TypeConstructor \"int\" [])),(\"main\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]))]"
+    -- it "works for multiple lines with a const" $ do
+    --   runTest
+    --     [ (nameToNumber "multiply"
+    --     , Scheme [] (arrow int (arrow int int))) ]
+    --     "test = 1 \nmain = multiply test"
+    --   `shouldBe`
+    --     "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"test\",Scheme [] (TypeConstructor \"int\" [])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"test\",Scheme [] (TypeConstructor \"int\" [])),(\"main\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]))]"
 
-    it "works for more complicated multiple lines" $ do
-      runTest
-        [ (nameToNumber "multiply"
-        , Scheme [] (arrow int (arrow int int))) ]
-        "square x = multiply x x\nmain = square 2"
-      `shouldBe`
-        "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"square\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"square\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []])),(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
+    -- it "works for more complicated multiple lines" $ do
+    --   runTest
+    --     [ (nameToNumber "multiply"
+    --     , Scheme [] (arrow int (arrow int int))) ]
+    --     "square x = multiply x x\nmain = square 2"
+    --   `shouldBe`
+    --     "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"square\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"square\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []])),(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
 
-    it "works for generics" $ do
-      runTest
-        []
-        "id x = x \ntesta = id 1\ntestb = id 2"
-      `shouldBe`
-        "Ok: [(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"testa\",Scheme [] (TypeConstructor \"int\" [])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"testa\",Scheme [] (TypeConstructor \"int\" [])),(\"testb\",Scheme [] (TypeConstructor \"int\" []))]"
+    -- it "works for generics" $ do
+    --   runTest
+    --     []
+    --     "id x = x \ntesta = id 1\ntestb = id 2"
+    --   `shouldBe`
+    --     "Ok: [(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"testa\",Scheme [] (TypeConstructor \"int\" [])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"testa\",Scheme [] (TypeConstructor \"int\" [])),(\"testb\",Scheme [] (TypeConstructor \"int\" []))]"
 
-    it "works for generics in a let" $ do
-      runTest
-        []
-        "main = let id x = x in id 1"
-      `shouldBe`
-        "Ok: [(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
+    -- it "works for generics in a let" $ do
+    --   runTest
+    --     []
+    --     "main = let id x = x in id 1"
+    --   `shouldBe`
+    --     "Ok: [(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
 
     it "works for double application" $ do
       runTest
@@ -84,17 +84,18 @@ spec = do
       `shouldBe`
         "Ok: [(\"main\",Scheme [] (TypeConstructor \"string\" []))]"
 
-    it "works for application" $ do
-      runTest
-        []
-        "apply f g = f g\nid x = x\ntesting = apply id 1"
-      `shouldBe`
-       "Ok"
+    -- it "works for application" $ do
+    --   runTest
+    --     []
+    --     "apply f g = f g\nid x = x\ntesting = apply id 1"
+    --   `shouldBe`
+    --    "Ok"
 
     it "works for id" $ do
       runTest
         []
-        "id x = x\nmain = id 1"
+        "let id x = x in id"
+        -- "id x = x\nmain = id id 1"
       `shouldBe`
         "Ok"
 
