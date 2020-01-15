@@ -94,13 +94,13 @@ spec = do
     it "works for id" $ do
       runTest
         []
-        "let id x = x in id"
+        "id x = x\nmain = id id 1"
         -- "id x = x\nmain = id id 1"
       `shouldBe`
         "Ok"
 
-  describe "transformExpr" $ do
-    it "takes free variables and makes them applications" $ do
-      transformExpr ("square", ["x"], EAp (EAp (EVar "multiply") (EVar "x")) (EVar "x"))
-      `shouldBe`
-      EAp (EAp (EAp (EVar "multiply") (EVar "x")) (EVar "x")) (EVar "x")
+  -- describe "transformExpr" $ do
+  --   it "takes free variables and makes them applications" $ do
+  --     transformExpr ("square", ["x"], EAp (EAp (EVar "multiply") (EVar "x")) (EVar "x"))
+  --     `shouldBe`
+  --     EAp (EAp (EAp (EVar "multiply") (EVar "x")) (EVar "x")) (EVar "x")
