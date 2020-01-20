@@ -140,6 +140,20 @@ main y = square y
       `shouldBe`
       [("main",[],ELet False [("f",ELam ["x"] (EVar "x"))] (EAp (EVar "f") (ENum 1)))]
 
+    it "can parse a nested let" $ do
+      let toks = clex 0 0 [r|
+main =
+  let
+    id x =
+      let y = 1
+      in y
+  in
+    x
+                            |]
+      syntax toks
+      `shouldBe`
+      []
+
     it "can parse a lambda expresion" $ do
       let toks = clex 0 0 "main = \\x -> x"
       syntax toks

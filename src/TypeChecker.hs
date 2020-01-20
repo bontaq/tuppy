@@ -175,7 +175,7 @@ typeCheck ::
   NameSupply ->
   VExpr ->
   Reply (Subst, TypeExpression) String
-typeCheck gamma ns x | trace ("Gamma " <> show gamma <> "\nNS " <> show ns <> "\nX " <> show x <> "\n") False = undefined
+-- typeCheck gamma ns x | trace ("Gamma " <> show gamma <> "\nNS " <> show ns <> "\nX " <> show x <> "\n") False = undefined
 typeCheck gamma ns (EVar x) = typeCheckVar gamma ns x
 typeCheck gamma ns (ENum x) = typeCheckNum gamma ns x
 typeCheck gamma ns (EStr x) = typeCheckStr gamma ns x
@@ -183,8 +183,9 @@ typeCheck gamma ns (EAp e1 e2) = typeCheckAp gamma ns e1 e2
 -- TODO: fix cheating and only checking the first lambda variable
 -- ie \x y -> * x y only x would be included and error on seeing y
 typeCheck gamma ns (ELam (x:_) e) = typeCheckLambda gamma ns x e
+typeCheck gamma ns (ELam [] e) = typeCheckLambda gamma ns [] e
 typeCheck gamma ns (ELet isRec xs e) = typeCheckLet gamma ns xs e
-typeCheck _ _ e = error $ show e
+-- typeCheck _ _ e = error $ "No good: " <> show e
 
 typeCheckAp typeenv ns e1 e2 | trace (show typeenv) False = undefined
 typeCheckAp gamma ns e1 e2 =
@@ -269,6 +270,7 @@ genBar unknowns ns t =
     al = scvs `zip` (nameSequence ns)
     t' = subType (alToSubst al) t
 
+dedupe [] = []
 dedupe (x:xs) = case x `elem` xs of
   True -> xs
   False -> x:dedupe(xs)

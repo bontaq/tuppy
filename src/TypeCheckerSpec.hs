@@ -1,6 +1,9 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module TypeCheckerSpec where
 
 import Test.Hspec
+import Text.RawString.QQ
 
 import TypeChecker
 import Language
@@ -91,16 +94,38 @@ spec = do
     --   `shouldBe`
     --    "Ok"
 
-    it "works for id" $ do
+    it "works for nested lets" $ do
       runTest
         []
-        "id x = x\nmain = id id 1"
-        -- "id x = x\nmain = id id 1"
+        [r|
+main =
+  let
+    id x =
+      let y = 1
+      in y
+  in
+    id 1
+          |]
       `shouldBe`
-        "Ok"
+        ""
+
+    -- it "works for id" $ do
+    --   runTest
+    --     []
+    --     "id x = x\nmain = id id 1"
+    --   `shouldBe`
+    --     "Ok"
 
   -- describe "transformExpr" $ do
   --   it "takes free variables and makes them applications" $ do
   --     transformExpr ("square", ["x"], EAp (EAp (EVar "multiply") (EVar "x")) (EVar "x"))
   --     `shouldBe`
   --     EAp (EAp (EAp (EVar "multiply") (EVar "x")) (EVar "x")) (EVar "x")
+
+what =
+  let
+    id x =
+      let y = 1
+      in y
+  in
+    id 1
