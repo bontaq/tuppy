@@ -216,7 +216,7 @@ mkSc :: String   -- main (fn name)
      -> String   -- =
      -> CoreExpr -- expr
      -> (Name, [Name], CoreExpr)
-mkSc name vars eq expr = (name, vars, expr)
+mkSc name vars eq expr = (name, [], foldr ELam vars expr)
 
 pSc :: Parser (Name, [Name], CoreExpr)
 pSc = pThen4 mkSc pVar (pZeroOrMore pVar) (pLit "=") pExpr
