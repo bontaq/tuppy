@@ -175,7 +175,7 @@ typeCheck ::
   NameSupply ->
   VExpr ->
   Reply (Subst, TypeExpression) String
--- typeCheck gamma ns x | trace ("Gamma " <> show gamma <> "\nNS " <> show ns <> "\nX " <> show x <> "\n") False = undefined
+typeCheck gamma ns x | trace ("Gamma " <> show gamma <> "\nNS " <> show ns <> "\nX " <> show x <> "\n") False = undefined
 typeCheck gamma ns (EVar x) = typeCheckVar gamma ns x
 typeCheck gamma ns (ENum x) = typeCheckNum gamma ns x
 typeCheck gamma ns (EStr x) = typeCheckStr gamma ns x
@@ -252,7 +252,7 @@ typeCheckLet2 phi (Ok (phi', t))
   = Ok (phi' `scompose` phi, t)
 
 -- addDeclarations is to update the type environment, gamma,
--- so that it associates schematic types form the types ts with
+-- so that it associates schematic types from the types ts with
 -- the variables xs
 -- the variables that become schematic are those that are not unknown
 addDeclarations :: TypeEnv -> NameSupply -> [Name] -> [TypeExpression] -> TypeEnv
@@ -365,7 +365,7 @@ transformExpr :: CoreScDefn -> CoreScDefn
 transformExpr coreSc@(name, vars, expr) =
   case length vars of
     0 -> coreSc
-    _ -> (name, vars, ELet False [(name <> "x", ELam vars expr)] (EVar $ name <> "x"))
+    -- _ -> (name, vars, ELet False [(name <> "x", ELam vars expr)] (EVar $ name <> "x"))
 
 typeCheckCore' :: TypeEnv -> CoreScDefn -> Reply TypeEnv String
 typeCheckCore' te ex | trace ("TE: " <> show te <> " EX: " <> show ex) False = undefined

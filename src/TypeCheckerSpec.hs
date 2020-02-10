@@ -87,45 +87,55 @@ spec = do
       `shouldBe`
         "Ok: [(\"main\",Scheme [] (TypeConstructor \"string\" []))]"
 
-    -- it "works for application" $ do
-    --   runTest
-    --     []
-    --     "apply f g = f g\nid x = x\ntesting = apply id 1"
-    --   `shouldBe`
-    --    "Ok"
+    it "works for this" $ do
+      runTest
+        []
+        "main = let id x = x in id"
+        `shouldBe`
+        "Ok"
 
-    it "works for nested lets" $ do
+    it "works for double application in normal non-let form" $ do
       runTest
         []
         [r|
-main =
-  let
-    id x =
-      let y = 1
-      in y
-  in
-    id 1
-          |]
-      `shouldBe`
-        ""
+id x = x
 
-    -- it "works for id" $ do
-    --   runTest
-    --     []
-    --     "id x = x\nmain = id id 1"
-    --   `shouldBe`
-    --     "Ok"
+main = id id "hello world"
+          |]
+        `shouldBe`
+        "Ok"
+
+--     it "works for application" $ do
+--       runTest
+--         []
+--         "apply f g = f g\nid x = x\ntesting = apply id 1"
+--       `shouldBe`
+--        "Ok: [(\"apply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]])),(\"apply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"apply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]])),(\"apply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"testing\",Scheme [] (TypeConstructor \"int\" []))]"
+
+--     it "works for id in let" $ do
+--       runTest
+--         []
+--         [r|
+-- main =
+--   let id x = x
+--   in id 1
+--           |]
+--       `shouldBe`
+--         "Ok: [(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
+
+--     it "works for id" $ do
+--       runTest
+--         []
+--         [r|
+-- id x = x
+
+-- main = id 1
+--           |]
+--       `shouldBe`
+--         "Ok: [(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
 
   -- describe "transformExpr" $ do
   --   it "takes free variables and makes them applications" $ do
   --     transformExpr ("square", ["x"], EAp (EAp (EVar "multiply") (EVar "x")) (EVar "x"))
   --     `shouldBe`
   --     EAp (EAp (EAp (EVar "multiply") (EVar "x")) (EVar "x")) (EVar "x")
-
-what =
-  let
-    id x =
-      let y = 1
-      in y
-  in
-    id 1
