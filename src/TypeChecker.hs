@@ -351,7 +351,7 @@ compose :: Foldable t => t (b -> b) -> b -> b
 compose fs v = foldl (flip (.)) id fs $ v
 
 arrowize :: CoreScDefn -> Reply (Subst, TypeExpression) b -> TypeEnv
--- arrowize te (Ok (s, t)) | trace ("CoreSC: " <> show te <> " EX: " <> show t) False = undefined
+arrowize te (Ok (s, t)) | trace ("CoreSC: " <> show te <> " EX: " <> show t) False = undefined
 arrowize (name, vars, _) (Ok (s, t)) = case length vars of
   _ -> [(nameToNumber name, Scheme [] t)]
   -- (arrow int (arrow int int))
@@ -360,6 +360,10 @@ arrowize (name, vars, _) (Ok (s, t)) = case length vars of
   --   where
   --     first = head vars
   --     firstType = s (nameToNumber first)
+
+transformExpr' :: CoreScDefn -> VExpr
+transformExpr' (name, vars, expr) =
+  ELet False [(name, ELam vars expr)] (EVar name)
 
 transformExpr :: CoreScDefn -> CoreScDefn
 transformExpr coreSc@(name, vars, expr) =
@@ -386,7 +390,7 @@ typeCheckCore' typeEnv coreExpr =
     --      (getVars coreExpr))
 
     -- 2. typecheck it
-    result = typeCheck typeEnv [0] (getExpr coreExpr')
+    result = typeCheck typeEnv [0] (transformExpr' coreExpr)
 
     -- 3. arrowize the variables and function
     expr' = arrowize coreExpr result

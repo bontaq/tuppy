@@ -80,19 +80,19 @@ spec = do
     --   `shouldBe`
     --     "Ok: [(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
 
-    it "works for double application" $ do
-      runTest
-        []
-        "main = let id x = x in id id \"hello world\""
-      `shouldBe`
-        "Ok: [(\"main\",Scheme [] (TypeConstructor \"string\" []))]"
-
-    it "works for this" $ do
-      runTest
-        []
-        "main = let id x = x in id"
-        `shouldBe`
-        "Ok"
+--    it "works for double application" $ do
+--      runTest
+--        []
+--        "main = let id x = x in id id \"hello world\""
+--      `shouldBe`
+--        "Ok: [(\"main\",Scheme [] (TypeConstructor \"string\" []))]"
+--
+--    it "works for this" $ do
+--      runTest
+--        []
+--        "main = let id x = x in id 1"
+--        `shouldBe`
+--        "Ok"
 
     it "works for double application in normal non-let form" $ do
       runTest
