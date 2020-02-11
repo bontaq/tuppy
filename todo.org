@@ -1,3 +1,16 @@
+* Reading list
+  Bidirectional Typing Rules:  A Tutorial
+  http://davidchristiansen.dk/tutorials/bidirectional.pdf
+
+  A tutorial implementation of a dependently typed lambda calculus
+  http://www.staff.science.uu.nl/~swier004/publications/2010-fundamentae-informatica.pdf
+
+  Complete and Easy Bidirectional Typecheckingfor Higher-Rank Polymorphism
+  https://arxiv.org/pdf/1306.6032.pdf
+
+  Sound and Complete Bidirectional Typechecking for
+  Higher-Rank Polymorphism with Existentials and Indexed Types
+  https://arxiv.org/pdf/1601.05106.pdf
 * Fri 03 Jan 2020 10:39:48 PM EST
 ** Typechecking for multiple variable supercombinators
 ** Use a set or map for the type env

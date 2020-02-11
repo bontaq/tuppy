@@ -110,7 +110,7 @@ unifyl phi eqns = foldr unify' (Ok phi) eqns
 
 
 data TypeScheme = Scheme [TypeVarName] TypeExpression
-                  deriving Show
+                  deriving (Show, Eq)
 
 unknownScheme :: TypeScheme -> [TypeVarName]
 unknownScheme (Scheme scvs t) =
@@ -175,7 +175,7 @@ typeCheck ::
   NameSupply ->
   VExpr ->
   Reply (Subst, TypeExpression) String
--- typeCheck gamma ns x | trace ("Gamma " <> show gamma <> "\nNS " <> show ns <> "\nX " <> show x <> "\n") False = undefined
+typeCheck gamma ns x | trace ("Gamma " <> show gamma <> "\nNS " <> show ns <> "\nX " <> show x <> "\n") False = undefined
 typeCheck gamma ns (EVar x) = typeCheckVar gamma ns x
 typeCheck gamma ns (ENum x) = typeCheckNum gamma ns x
 typeCheck gamma ns (EStr x) = typeCheckStr gamma ns x
@@ -183,9 +183,11 @@ typeCheck gamma ns (EAp e1 e2) = typeCheckAp gamma ns e1 e2
 -- TODO: fix cheating and only checking the first lambda variable
 -- ie \x y -> * x y only x would be included and error on seeing y
 typeCheck gamma ns (ELam (x:_) e) = typeCheckLambda gamma ns x e
+typeCheck gamma ns (ELam [] e) = typeCheckLambda gamma ns [] e
 typeCheck gamma ns (ELet isRec xs e) = typeCheckLet gamma ns xs e
-typeCheck _ _ e = error $ show e
+-- typeCheck _ _ e = error $ "No good: " <> show e
 
+typeCheckAp typeenv ns e1 e2 | trace (show typeenv) False = undefined
 typeCheckAp gamma ns e1 e2 =
   typeCheckAp1 tvn (typeCheckList gamma ns' [e1, e2])
   where
@@ -250,7 +252,7 @@ typeCheckLet2 phi (Ok (phi', t))
   = Ok (phi' `scompose` phi, t)
 
 -- addDeclarations is to update the type environment, gamma,
--- so that it associates schematic types form the types ts with
+-- so that it associates schematic types from the types ts with
 -- the variables xs
 -- the variables that become schematic are those that are not unknown
 addDeclarations :: TypeEnv -> NameSupply -> [Name] -> [TypeExpression] -> TypeEnv
@@ -268,9 +270,10 @@ genBar unknowns ns t =
     al = scvs `zip` (nameSequence ns)
     t' = subType (alToSubst al) t
 
+dedupe [] = []
 dedupe (x:xs) = case x `elem` xs of
   True -> xs
-  False -> x:dedupe(xs)
+  False -> x : dedupe(xs)
 
 typeCheckList ::
   TypeEnv
@@ -344,42 +347,43 @@ alToSubst al tvn
   | tvn `elem` (dom al) = TypeVar (val al tvn)
   | otherwise           = TypeVar tvn
 
-transformExpr :: CoreScDefn -> VExpr
-transformExpr (_, vars, expr) = foldl (\expr v -> EAp expr (EVar v)) expr vars
-
 compose :: Foldable t => t (b -> b) -> b -> b
 compose fs v = foldl (flip (.)) id fs $ v
 
 arrowize :: CoreScDefn -> Reply (Subst, TypeExpression) b -> TypeEnv
--- arrowize te (Ok (s, t)) | trace ("CoreSC: " <> show te <> " EX: " <> show t) False = undefined
+arrowize te (Ok (s, t)) | trace ("CoreSC: " <> show te <> " EX: " <> show t) False = undefined
 arrowize (name, vars, _) (Ok (s, t)) = case length vars of
-  0 -> [(nameToNumber name, Scheme [] t)]
-  -- (arrow int (arrow int int))
-  _ -> [ (nameToNumber name
-        , Scheme [] (arrow firstType t)) ] -- [(nameToNumber name, Scheme [] scheme)]
-    where
-      first = head vars
-      firstType = s (nameToNumber first)
+  _ -> addDeclarations [] [0] [name] [t]
+
+transformExpr :: CoreScDefn -> CoreScDefn
+transformExpr coreSc@(name, vars, expr) =
+  case length vars of
+    0 -> coreSc
 
 typeCheckCore' :: TypeEnv -> CoreScDefn -> Reply TypeEnv String
--- typeCheckCore' te ex | trace ("TE: " <> show te <> " EX: " <> show ex) False = undefined
+typeCheckCore' te ex | trace ("TE: " <> show te <> " EX: " <> show ex) False = undefined
 typeCheckCore' typeEnv coreExpr =
   let
     getName (name, _, _) = name
     getVars (_, vars, _) = vars
     getExpr (_, _, expr) = expr
 
+    -- instead of this, we turn it into a let if there are arguments
+    -- case length vars of
+    coreExpr' = transformExpr coreExpr
+
     -- 1. update the type env with vars
-    typeEnv' = typeEnv
-      <> (map
-         (\var -> (nameToNumber var, Scheme [] (TypeVar $ nameToNumber var)))
-         (getVars coreExpr))
+    -- typeEnv' = typeEnv
+    --   <> (map
+    --      (\var -> (nameToNumber var, Scheme [] (TypeVar $ nameToNumber var)))
+    --      (getVars coreExpr))
 
     -- 2. typecheck it
-    result = typeCheck typeEnv' [0] (getExpr coreExpr)
+    result = typeCheck typeEnv [0] (getExpr coreExpr)
 
     -- 3. arrowize the variables and function
     expr' = arrowize coreExpr result
+    -- expr' = result
   in
     -- 4. extend the original typeEnv with the new information or fail
     case result of

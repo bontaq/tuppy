@@ -1,6 +1,9 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module TypeCheckerSpec where
 
 import Test.Hspec
+import Text.RawString.QQ
 
 import TypeChecker
 import Language
@@ -25,20 +28,24 @@ runTest typeEnv strProgram =
 spec :: Spec
 spec = do
   describe "TypeChecker" $ do
+
     it "works for an integer" $ do
       runTest [] "main = 3"
       `shouldBe`
       "Ok: [(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
+
     it "works for a string" $ do
       runTest [] "main = \"hello\""
       `shouldBe`
       "Ok: [(\"main\",Scheme [] (TypeConstructor \"string\" []))]"
+
     it "works for multiply" $ do
       runTest
         [(nameToNumber "multiply", Scheme [] (arrow int (arrow int int)))]
         "main = multiply 3 3"
       `shouldBe`
       "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
+
     it "fails for bad multiply" $ do
       runTest
         [(nameToNumber "multiply", Scheme [] (arrow int (arrow int int)))]
@@ -63,43 +70,52 @@ spec = do
       `shouldBe`
         "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"square\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"square\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []])),(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
 
-    it "works for generics" $ do
-      runTest
-        []
-        "id x = x \ntesta = id 1\ntestb = id 2"
-      `shouldBe`
-        "Ok: [(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"testa\",Scheme [] (TypeConstructor \"int\" [])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [23],TypeVar [23]])),(\"testa\",Scheme [] (TypeConstructor \"int\" [])),(\"testb\",Scheme [] (TypeConstructor \"int\" []))]"
-
-    it "works for generics in a let" $ do
-      runTest
-        []
-        "main = let id x = x in id 1"
-      `shouldBe`
-        "Ok: [(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
 
     it "works for double application" $ do
+     runTest
+       []
+       "main = let id x = x in id id \"hello world\""
+     `shouldBe`
+       "Ok: [(\"main\",Scheme [] (TypeConstructor \"string\" []))]"
+
+
+    it "works for double application in normal non-let form" $ do
       runTest
         []
-        "main = let id x = x in id id \"hello world\""
-      `shouldBe`
-        "Ok: [(\"main\",Scheme [] (TypeConstructor \"string\" []))]"
+        [r|
+id x = x
 
-    it "works for application" $ do
+main = id id 1
+          |]
+        `shouldBe`
+        "Ok: [(\"id\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"id\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
+
+    it "works for const" $ do
       runTest
         []
-        "apply f g = f g\nid x = x\ntesting = apply id 1"
-      `shouldBe`
-       "Ok"
+        [r|
+const x y = y
 
-    it "works for id" $ do
+main = const 2 "dog"
+          |]
+        `shouldBe`
+        "Ok: [(\"const\",Scheme [[0],[2]] (TypeConstructor \"arrow\" [TypeVar [0],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [2]]])),(\"const\",Scheme [[0],[2]] (TypeConstructor \"arrow\" [TypeVar [0],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [2]]])),(\"main\",Scheme [] (TypeConstructor \"string\" []))]"
+
+
+    it "works for let id" $ do
       runTest
         []
-        "id x = x\nmain = id 1"
-      `shouldBe`
-        "Ok"
+        [r|
+main =
+  let id x = x
+  in id 1
+          |]
+        `shouldBe`
+        "Ok: [(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
 
-  describe "transformExpr" $ do
-    it "takes free variables and makes them applications" $ do
-      transformExpr ("square", ["x"], EAp (EAp (EVar "multiply") (EVar "x")) (EVar "x"))
-      `shouldBe`
-      EAp (EAp (EAp (EVar "multiply") (EVar "x")) (EVar "x")) (EVar "x")
+    -- it "works for application" $ do
+    --   runTest
+    --     []
+    --     "apply f g x = f g x\nid x = x\ntesting = apply id 1"
+    --   `shouldBe`
+    --    "Ok: [(\"apply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]])),(\"apply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"apply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]])),(\"apply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"testing\",Scheme [] (TypeConstructor \"int\" []))]"
