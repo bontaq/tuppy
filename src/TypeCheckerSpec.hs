@@ -113,9 +113,15 @@ main =
         `shouldBe`
         "Ok: [(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
 
-    -- it "works for application" $ do
-    --   runTest
-    --     []
-    --     "apply f g x = f g x\nid x = x\ntesting = apply id 1"
-    --   `shouldBe`
-    --    "Ok: [(\"apply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]])),(\"apply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"apply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]])),(\"apply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]])),(\"id\",Scheme [] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"testing\",Scheme [] (TypeConstructor \"int\" []))]"
+    it "works for application" $ do
+      runTest
+        []
+        [r|
+apply f g x = f g x
+
+id x = x
+
+test = apply id id 1
+         |]
+      `shouldBe`
+       "Ok: [(\"apply\",Scheme [[0],[2],[4],[6],[8]] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]],TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]]])),(\"apply\",Scheme [[0],[2],[4],[6],[8]] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]],TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]]])),(\"id\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"apply\",Scheme [[0],[2],[4],[6],[8]] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]],TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]]])),(\"apply\",Scheme [[0],[2],[4],[6],[8]] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]],TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]]])),(\"id\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"test\",Scheme [] (TypeConstructor \"int\" []))] "
