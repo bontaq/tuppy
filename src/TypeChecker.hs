@@ -110,7 +110,7 @@ unifyl phi eqns = foldr unify' (Ok phi) eqns
 
 
 data TypeScheme = Scheme [TypeVarName] TypeExpression
-                  deriving Show
+                  deriving (Show, Eq)
 
 unknownScheme :: TypeScheme -> [TypeVarName]
 unknownScheme (Scheme scvs t) =
@@ -273,7 +273,7 @@ genBar unknowns ns t =
 dedupe [] = []
 dedupe (x:xs) = case x `elem` xs of
   True -> xs
-  False -> x:dedupe(xs)
+  False -> x : dedupe(xs)
 
 typeCheckList ::
   TypeEnv
@@ -353,23 +353,12 @@ compose fs v = foldl (flip (.)) id fs $ v
 arrowize :: CoreScDefn -> Reply (Subst, TypeExpression) b -> TypeEnv
 arrowize te (Ok (s, t)) | trace ("CoreSC: " <> show te <> " EX: " <> show t) False = undefined
 arrowize (name, vars, _) (Ok (s, t)) = case length vars of
-  _ -> [(nameToNumber name, Scheme [] t)]
-  -- (arrow int (arrow int int))
-  -- _ -> [ (nameToNumber name
-  --       , Scheme [] (arrow firstType t)) ] -- [(nameToNumber name, Scheme [] scheme)]
-  --   where
-  --     first = head vars
-  --     firstType = s (nameToNumber first)
-
-transformExpr' :: CoreScDefn -> VExpr
-transformExpr' (name, vars, expr) =
-  ELet False [(name, ELam vars expr)] (EVar name)
+  _ -> addDeclarations [] [0] [name] [t]
 
 transformExpr :: CoreScDefn -> CoreScDefn
 transformExpr coreSc@(name, vars, expr) =
   case length vars of
     0 -> coreSc
-    -- _ -> (name, vars, ELet False [(name <> "x", ELam vars expr)] (EVar $ name <> "x"))
 
 typeCheckCore' :: TypeEnv -> CoreScDefn -> Reply TypeEnv String
 typeCheckCore' te ex | trace ("TE: " <> show te <> " EX: " <> show ex) False = undefined
@@ -390,7 +379,7 @@ typeCheckCore' typeEnv coreExpr =
     --      (getVars coreExpr))
 
     -- 2. typecheck it
-    result = typeCheck typeEnv [0] (transformExpr' coreExpr)
+    result = typeCheck typeEnv [0] (getExpr coreExpr)
 
     -- 3. arrowize the variables and function
     expr' = arrowize coreExpr result
