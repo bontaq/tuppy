@@ -183,4 +183,4 @@ main =
       let toks = clex 0 0 "main : a -> a -> a"
       syntax toks
       `shouldBe`
-      []
+      [("main",[],Ann "main" (Fun (TFree "a") (Fun (TFree "a") (TFree "a"))))]

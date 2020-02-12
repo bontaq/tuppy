@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Parser where
@@ -152,13 +153,12 @@ pApply p f toks =
   [ (f(n), toks') | (n, toks') <- p toks ]
 
 -- second parser represents the separator, not returned
--- TODO: this might need to be fixed to understand "a,b,c" and include the c
--- pOneOrMoreWithSep :: Parser a -> Parser b -> Parser [a]
-pOneOrMoreWithSep :: Parser a1 -> Parser [a2] -> Parser [a1]
+pOneOrMoreWithSep :: Parser a -> Parser String -> Parser [a]
 pOneOrMoreWithSep p pSep =
-  pOneOrMore $ (pThen combine p (pSep `pAlt` pEmpty []))
+  pThen combine' p $ pZeroOrMore $ (pThen combine pSep p)
   where
-    combine v1 v2 = v1
+    combine v1 v2 = v2
+    combine' e  es = e:es
 
 -- pSatisfies
 pSat :: (String -> Bool) -> Parser String
@@ -182,7 +182,7 @@ mkApChain (e:es) = foldl EAp e es
 -- parse (core language)
 --
 keywords :: [String]
-keywords = ["let", "letrec", "case", "in", "of", "Pack", "=", "->", ":"]
+keywords = ["let", "letrec", "case", "in", "of", "Pack", "=", ":"]
 
 pVar :: Parser String
 pVar = pSat (not . (flip elem) keywords)
@@ -237,7 +237,11 @@ mkSc :: String   -- main (fn name)
 mkSc name vars eq expr = (name, [], foldr ELam expr (fmap (\v -> [v]) vars))
 
 pSc :: Parser (Name, [Name], CoreExpr)
-pSc = pThen4 mkSc pVar (pZeroOrMore pVar) (pLit "=") pExpr
+pSc = pSc' `pAlt` pType'
+  where
+    pSc' = pThen4 mkSc pVar (pZeroOrMore pVar) (pLit "=") pExpr
+    mkScFromType t@(Ann name types) = (name, [], t)
+    pType' = pApply pType mkScFromType
 
 scs :: [Token] -> [[Token]]
 scs [] = []
