@@ -178,3 +178,9 @@ main =
     it "can parse a string with spaces" $ do
       let toks = clex 0 0 "main = \"hello world!\""
       syntax toks `shouldBe` [("main", [], EStr "hello world!")]
+
+    it "can parse a simple type definition" $ do
+      let toks = clex 0 0 "main : a -> a -> a"
+      syntax toks
+      `shouldBe`
+      []

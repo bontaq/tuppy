@@ -19,12 +19,20 @@ data Expr a
     [(a, Expr a)]         ---- definitions
     (Expr a)              ---- body of let(rec)
 
+  -- TODO: | Ann (Expr a) Type
+  | Ann a Type
   -- not supported yet
   -- | EConstr Int Int -- Constructor tag arity
   -- | ECase
   --   (Expr a)
   --   [Alter a]
   deriving (Show, Eq)
+
+data Type
+  = TFree Name
+  | Fun Type Type
+  deriving (Show, Eq)
+
 
 type CoreExpr = Expr Name
 

@@ -153,9 +153,10 @@ pApply p f toks =
 
 -- second parser represents the separator, not returned
 -- TODO: this might need to be fixed to understand "a,b,c" and include the c
-pOneOrMoreWithSep :: Parser a -> Parser b -> Parser [a]
+-- pOneOrMoreWithSep :: Parser a -> Parser b -> Parser [a]
+pOneOrMoreWithSep :: Parser a1 -> Parser [a2] -> Parser [a1]
 pOneOrMoreWithSep p pSep =
-  pOneOrMore $ (pThen combine p pSep)
+  pOneOrMore $ (pThen combine p (pSep `pAlt` pEmpty []))
   where
     combine v1 v2 = v1
 
@@ -181,7 +182,7 @@ mkApChain (e:es) = foldl EAp e es
 -- parse (core language)
 --
 keywords :: [String]
-keywords = ["let", "letrec", "case", "in", "of", "Pack", "="]
+keywords = ["let", "letrec", "case", "in", "of", "Pack", "=", "->", ":"]
 
 pVar :: Parser String
 pVar = pSat (not . (flip elem) keywords)
@@ -210,6 +211,11 @@ pLambda = pThen4 mkLambda (pLit "\\") (pOneOrMore pVar) (pLit "->") pExpr
   where
     mkLambda _ vars _ e = ELam vars e
 
+pType :: Parser CoreExpr
+pType = pThen3 mkType pVar (pLit ":") (pOneOrMoreWithSep pVar (pLit "->"))
+  where
+    mkType name _ (v:vs) = Ann name (TFree $ concat (v:vs))
+
 -- this is the big one, which defines each acceptable parse
 -- for the language.  it goes through and tries each.
 pAexpr :: Parser CoreExpr
@@ -218,6 +224,7 @@ pAexpr =
   `pAlt` pStr
   `pAlt` pLambda
   `pAlt` pApply pVar EVar
+  `pAlt` pType
   `pAlt` pLet
 
 mkSc :: String   -- main (fn name)
