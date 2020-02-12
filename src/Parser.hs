@@ -17,6 +17,9 @@ isIdChar c = isAlpha c || isDigit c || (c == '_')
 isQuote :: Char -> Bool
 isQuote c = c == '"'
 
+isSingleQuote :: Char -> Bool
+isSingleQuote c = c == '\''
+
 isEndOfLine :: Char -> Bool
 isEndOfLine c = c == '\n'
 
@@ -43,6 +46,12 @@ type Indent = Integer
 type Token = (Offset, Indent, String)
 
 clex :: Offset -> Indent -> String -> [Token]
+
+clex n o (c:cs) | isSingleQuote c =
+                  [(n, o, "'"), stringToken, (n, o, "'")] <> (clex n o restCs)
+  where
+    stringToken = (,,) n o $ takeWhile (not . isSingleQuote) cs
+    restCs = drop 1 $ dropWhile (not . isSingleQuote) cs
 
 clex n o (c:cs) | isQuote c = [(n, o, "\""), stringToken, (n, o, "\"")] <> (clex n o restCs)
   where
