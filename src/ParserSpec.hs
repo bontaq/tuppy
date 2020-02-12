@@ -33,6 +33,11 @@ spec = do
       `shouldBe`
       [(0, 0, "\""), (0, 0, "hello world"), (0, 0, "\"")]
 
+    it "lexes a single quote string as a token" $ do
+      clex 0 0 "'hello world'"
+      `shouldBe`
+      [(0, 0, "'"), (0, 0, "hello world"), (0, 0, "'")]
+
     it "works for a larger example" $ do
       clex 0 0 [r|
 a x = 1 ;
