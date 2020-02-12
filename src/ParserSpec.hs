@@ -117,7 +117,7 @@ main y = square y
       let toks = clex 0 0 "main x = x"
       syntax toks
       `shouldBe`
-      [("main", ["x"], EVar "x")]
+      [("main", [], ELam ["x"] (EVar "x"))]
 
     it "can parse multiple supercombinators" $ do
       let toks = clex 0 0 [r|
@@ -126,8 +126,8 @@ main y = square y
                           |]
       syntax toks
       `shouldBe`
-      [ ("square", ["x"], EAp (EAp (EVar "*") (EVar "x")) (EVar "x"))
-      , ("main", ["y"], EAp (EVar "square") (EVar "y")) ]
+      [ ("square",[],ELam ["x"] (EAp (EAp (EVar "*") (EVar "x")) (EVar "x")))
+        , ("main",[],ELam ["y"] (EAp (EVar "square") (EVar "y"))) ]
       -- here you can see an example of application and its nested
       -- nature
 
@@ -157,7 +157,9 @@ main =
                             |]
       syntax toks
       `shouldBe`
-      []
+      [("main",[],
+        ELet False [("id",ELam ["x"] (ELet False [("y",ELam [] (ENum 1))] (EVar "y")))]
+        (EVar "x"))]
 
     it "can parse a lambda expresion" $ do
       let toks = clex 0 0 "main = \\x -> x"
