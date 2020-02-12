@@ -214,7 +214,9 @@ pLambda = pThen4 mkLambda (pLit "\\") (pOneOrMore pVar) (pLit "->") pExpr
 pType :: Parser CoreExpr
 pType = pThen3 mkType pVar (pLit ":") (pOneOrMoreWithSep pVar (pLit "->"))
   where
-    mkType name _ (v:vs) = Ann name (TFree $ concat (v:vs))
+    mkType name _ vs = Ann name (types vs)
+    types [t]     = TFree t
+    types (t:ts)  = Fun (TFree t) (types ts)
 
 -- this is the big one, which defines each acceptable parse
 -- for the language.  it goes through and tries each.
