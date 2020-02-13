@@ -211,10 +211,10 @@ pLambda = pThen4 mkLambda (pLit "\\") (pOneOrMore pVar) (pLit "->") pExpr
   where
     mkLambda _ vars _ e = ELam vars e
 
-pType :: Parser CoreExpr
+pType :: Parser Type
 pType = pThen3 mkType pVar (pLit ":") (pOneOrMoreWithSep pVar (pLit "->"))
   where
-    mkType name _ vs = Ann name (types vs)
+    mkType name _ vs = types vs
     types [t]     = TFree t
     types (t:ts)  = Fun (TFree t) (types ts)
 
@@ -226,7 +226,6 @@ pAexpr =
   `pAlt` pStr
   `pAlt` pLambda
   `pAlt` pApply pVar EVar
-  `pAlt` pType
   `pAlt` pLet
 
 mkSc :: String   -- main (fn name)
@@ -237,11 +236,10 @@ mkSc :: String   -- main (fn name)
 mkSc name vars eq expr = (name, [], foldr ELam expr (fmap (\v -> [v]) vars))
 
 pSc :: Parser (Name, [Name], CoreExpr)
-pSc = pSc' `pAlt` pType'
+pSc = pThen scAndType pType pSc' `pAlt` pSc'
   where
+    scAndType t (name, vars, expr) = (name, vars, (Ann name t expr))
     pSc' = pThen4 mkSc pVar (pZeroOrMore pVar) (pLit "=") pExpr
-    mkScFromType t@(Ann name types) = (name, [], t)
-    pType' = pApply pType mkScFromType
 
 scs :: [Token] -> [[Token]]
 scs [] = []

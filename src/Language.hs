@@ -20,7 +20,7 @@ data Expr a
     (Expr a)              ---- body of let(rec)
 
   -- TODO: | Ann (Expr a) Type
-  | Ann a Type
+  | Ann a Type (Expr a)
   -- not supported yet
   -- | EConstr Int Int -- Constructor tag arity
   -- | ECase
