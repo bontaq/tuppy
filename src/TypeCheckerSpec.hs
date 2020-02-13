@@ -125,3 +125,13 @@ test = apply id id 1
          |]
       `shouldBe`
        "Ok: [(\"apply\",Scheme [[0],[2],[4],[6],[8]] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]],TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]]])),(\"apply\",Scheme [[0],[2],[4],[6],[8]] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]],TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]]])),(\"id\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"apply\",Scheme [[0],[2],[4],[6],[8]] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]],TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]]])),(\"apply\",Scheme [[0],[2],[4],[6],[8]] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]],TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]]])),(\"id\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"test\",Scheme [] (TypeConstructor \"int\" []))]"
+
+  it "works with an annotated type" $ do
+    runTest
+      []
+      [r|
+main : a
+main x = x
+        |]
+      `shouldBe`
+      ""
