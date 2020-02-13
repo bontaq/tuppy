@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Parser where
@@ -152,12 +153,12 @@ pApply p f toks =
   [ (f(n), toks') | (n, toks') <- p toks ]
 
 -- second parser represents the separator, not returned
--- TODO: this might need to be fixed to understand "a,b,c" and include the c
-pOneOrMoreWithSep :: Parser a -> Parser b -> Parser [a]
+pOneOrMoreWithSep :: Parser a -> Parser String -> Parser [a]
 pOneOrMoreWithSep p pSep =
-  pOneOrMore $ (pThen combine p pSep)
+  pThen combine' p $ pZeroOrMore $ (pThen combine pSep p)
   where
-    combine v1 v2 = v1
+    combine v1 v2 = v2
+    combine' e  es = e:es
 
 -- pSatisfies
 pSat :: (String -> Bool) -> Parser String
@@ -181,7 +182,7 @@ mkApChain (e:es) = foldl EAp e es
 -- parse (core language)
 --
 keywords :: [String]
-keywords = ["let", "letrec", "case", "in", "of", "Pack", "="]
+keywords = ["let", "letrec", "case", "in", "of", "Pack", "=", ":"]
 
 pVar :: Parser String
 pVar = pSat (not . (flip elem) keywords)
@@ -210,6 +211,13 @@ pLambda = pThen4 mkLambda (pLit "\\") (pOneOrMore pVar) (pLit "->") pExpr
   where
     mkLambda _ vars _ e = ELam vars e
 
+pType :: Parser Type
+pType = pThen3 mkType pVar (pLit ":") (pOneOrMoreWithSep pVar (pLit "->"))
+  where
+    mkType name _ vs = types vs
+    types [t]     = TFree t
+    types (t:ts)  = Fun (TFree t) (types ts)
+
 -- this is the big one, which defines each acceptable parse
 -- for the language.  it goes through and tries each.
 pAexpr :: Parser CoreExpr
@@ -228,7 +236,10 @@ mkSc :: String   -- main (fn name)
 mkSc name vars eq expr = (name, [], foldr ELam expr (fmap (\v -> [v]) vars))
 
 pSc :: Parser (Name, [Name], CoreExpr)
-pSc = pThen4 mkSc pVar (pZeroOrMore pVar) (pLit "=") pExpr
+pSc = pThen scAndType pType pSc' `pAlt` pSc'
+  where
+    scAndType t (name, vars, expr) = (name, vars, (Ann name t expr))
+    pSc' = pThen4 mkSc pVar (pZeroOrMore pVar) (pLit "=") pExpr
 
 scs :: [Token] -> [[Token]]
 scs [] = []

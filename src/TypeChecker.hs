@@ -185,6 +185,8 @@ typeCheck gamma ns (EAp e1 e2) = typeCheckAp gamma ns e1 e2
 typeCheck gamma ns (ELam (x:_) e) = typeCheckLambda gamma ns x e
 typeCheck gamma ns (ELam [] e) = typeCheckLambda gamma ns [] e
 typeCheck gamma ns (ELet isRec xs e) = typeCheckLet gamma ns xs e
+-- TODO: Actually implementing a check
+typeCheck gamma ns (Ann _ t e) = typeCheck gamma ns e
 -- typeCheck _ _ e = error $ "No good: " <> show e
 
 typeCheckAp typeenv ns e1 e2 | trace (show typeenv) False = undefined

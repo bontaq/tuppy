@@ -178,3 +178,15 @@ main =
     it "can parse a string with spaces" $ do
       let toks = clex 0 0 "main = \"hello world!\""
       syntax toks `shouldBe` [("main", [], EStr "hello world!")]
+
+    it "can parse a simple type definition" $ do
+      let toks = clex 0 0 "main : a -> b -> c"
+      pType toks
+      `shouldBe`
+      [(Fun (TFree "a") (Fun (TFree "b") (TFree "c")),[]),(Fun (TFree "a") (TFree "b"),[(0,1,"->"),(0,1,"c")]),(TFree "a",[(0,1,"->"),(0,1,"b"),(0,1,"->"),(0,1,"c")])]
+
+    it "can combine a type with a definition" $ do
+      let toks = clex 0 0 "main : a -> b -> c\nmain = 1"
+      syntax toks
+      `shouldBe`
+      [("main",[],Ann "main" (Fun (TFree "a") (Fun (TFree "b") (TFree "c"))) (ENum 1))]
