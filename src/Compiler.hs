@@ -32,13 +32,13 @@ compileExpr (ELet recursive vars expr) =
   <> "return " <> (compileExpr expr)
   where
     handleVars = concat . map handleVar
-    handleVar (name, expr) = "var " <> name <> " =" <> compileExpr expr <> ";"
+    handleVar (name, expr) = "var " <> name <> " = " <> compileExpr expr <> ";"
 
 compileExpr (ENum n) = show n
 compileExpr (ELam vars expr) =
   "(function ("
   <> handledVars
-  <> ") { return "
+  <> ") { "
   <> compileExpr expr
   <> " })(" <> handledVars <> ")"
   where
