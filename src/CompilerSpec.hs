@@ -31,6 +31,6 @@ spec = do
     it "works for a let statement" $ do
       testRun "test x = let a = 1 in + a 1"
       `shouldBe`
-      "function test() {\n return (function (x) { return var a =(function () { return 1 })();\n return ((+ (a ))(1)) })(x)\n};\n"
+      "function test() {\n return (function (x) { var a = 1;\n return ((+ (a ))(1)) })\n};\n"
     -- why am I not using quasiquotes for the results?
     -- because it inserts a bunch of space around them

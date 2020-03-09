@@ -35,12 +35,14 @@ compileExpr (ELet recursive vars expr) =
     handleVar (name, expr) = "var " <> name <> " = " <> compileExpr expr <> ";"
 
 compileExpr (ENum n) = show n
+compileExpr (ELam [] expr) = compileExpr expr
 compileExpr (ELam vars expr) =
   "(function ("
   <> handledVars
   <> ") { "
   <> compileExpr expr
-  <> " })(" <> handledVars <> ")"
+  <> " })"
+  -- <> " })(" <> handledVars <> ")"
   where
     handledVars = intersperse "," vars
 
