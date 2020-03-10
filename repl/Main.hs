@@ -1,11 +1,12 @@
--- {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
--- import Protolude
+import Control.Monad
+import Control.Concurrent
+
 import qualified Web.Scotty as Sc
--- import qualified Data.Text as Txt
+import qualified Data.Text as Txt
 import qualified Network.Wai.Middleware.Gzip as Sc
 import qualified Network.Wai.Handler.WebSockets as WaiWs
 import qualified Network.WebSockets as WS
@@ -30,13 +31,13 @@ scottyApp =
 
 wsapp :: WS.ServerApp
 wsapp pending = do
-  putText "ws connected"
+  putStrLn "ws connected"
   conn <- WS.acceptRequest pending
   WS.forkPingThread conn 30
 
-  (msg :: Text) <- WS.receiveData conn
-  WS.sendTextData conn $ ("initial> " :: Text) <> msg
+  (msg :: Txt.Text) <- WS.receiveData conn
+  WS.sendTextData conn $ ("initial> " :: Txt.Text) <> msg
 
   forever $ do
-    WS.sendTextData conn $ "loop data"
+    WS.sendTextData conn $ ("loop data" :: Txt.Text)
     threadDelay $ 1 * 1000000
