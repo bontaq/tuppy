@@ -15,7 +15,7 @@ import qualified Network.Wai.Handler.Warp as Warp
 
 main :: IO ()
 main = do
-  let port = 80
+  let port = 8000
   let settings = Warp.setPort port Warp.defaultSettings
   sapp <- scottyApp
   Warp.runSettings settings $ WaiWs.websocketsOr WS.defaultConnectionOptions wsapp sapp
@@ -27,7 +27,7 @@ scottyApp =
     --Sc.middleware S.logStdoutDev
 
     Sc.get "/" $
-      Sc.file "index.html"
+      Sc.file "./repl/index.html"
 
 wsapp :: WS.ServerApp
 wsapp pending = do
