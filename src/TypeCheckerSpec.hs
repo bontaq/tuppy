@@ -134,4 +134,4 @@ main : a
 main x = x
         |]
       `shouldBe`
-      ""
+      "Ok: [(\"main\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]]))]"
