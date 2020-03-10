@@ -27,9 +27,12 @@ compileExpr (EAp exprA exprB) =
   <> "))"
 -- ELet False [("a",EVar "1")] (EVar "a"))
 compileExpr (ELet recursive vars expr) =
+  "() => {"
+  <>
   handleVars vars
   <> "\n "
   <> "return " <> (compileExpr expr)
+  <> "}"
   where
     handleVars = concat . map handleVar
     handleVar (name, expr) = "var " <> name <> " = " <> compileExpr expr <> ";"
