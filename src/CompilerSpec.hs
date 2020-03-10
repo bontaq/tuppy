@@ -23,7 +23,7 @@ spec = do
     it "works for a function with arguments" $ do
       testRun "square x y = multiply x y"
       `shouldBe`
-      "function square() {\n return (function (x) { return (function (y) { return ((multiply (x ))(y )) })(y) })(x)\n};\n"
+      "function square() {\n return (function (x) { return (function (y) { return ((multiply (x ))(y )) }) })\n};\n"
     it "works for a string" $ do
       testRun "test = \"hello\""
       `shouldBe`

@@ -35,11 +35,12 @@ compileExpr (ELet recursive vars expr) =
     handleVar (name, expr) = "var " <> name <> " = " <> compileExpr expr <> ";"
 
 compileExpr (ENum n) = show n
+compileExpr (ELam [] (ENum n)) = compileExpr (ENum n)
 compileExpr (ELam [] expr) = compileExpr expr
 compileExpr (ELam vars expr) =
   "(function ("
   <> handledVars
-  <> ") { "
+  <> ") { return "
   <> compileExpr expr
   <> " })"
   -- <> " })(" <> handledVars <> ")"
@@ -49,6 +50,8 @@ compileExpr (ELam vars expr) =
 -- I hate to special case let like this, but seems necessary otherwise
 -- there's too many returns
 compileExpr' elet@(ELet _ _ _) = compileExpr elet
+-- compileExpr' elet@(ELam_ _ _) = compileExpr elet
+compileExpr' elam@(ELam _ _) = "return " <> compileExpr elam
 compileExpr' expr = "return " <> compileExpr expr
 
 compile' :: ScDefn Name -> String
