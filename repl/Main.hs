@@ -17,6 +17,10 @@ import qualified Network.Wai.Handler.Warp as Warp
 -- file watching
 import System.FSNotify
 
+
+--
+-- Server
+--
 wsapp :: WS.ServerApp
 wsapp pending = do
   putStrLn "ws connected"
@@ -47,6 +51,9 @@ runServer = do
   Warp.runSettings settings
     $ WaiWs.websocketsOr WS.defaultConnectionOptions wsapp sapp
 
+--
+-- Files
+--
 runFileWatcher :: IO ()
 runFileWatcher =
   withManager $ \mgr -> do
@@ -57,8 +64,19 @@ runFileWatcher =
       print
     forever $ threadDelay 1000000
 
+--
+-- Repl
+--
+repl :: IO ()
+repl = forever $ do
+  s <- getLine
+  putStrLn $ "> " <> s
+
+--
+-- Connect the dots
+--
 main :: IO ()
 main = do
   forkIO runFileWatcher
   forkIO runServer
-  forever $ threadDelay 10000000
+  repl
