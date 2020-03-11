@@ -80,6 +80,7 @@ executable tuppy-repl
     , websockets
     , text
     , fsnotify
+    , stm
     , tuppy
   default-language: Haskell2010
 

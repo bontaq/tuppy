@@ -3,7 +3,9 @@
 module Main where
 
 import Control.Monad
+import Control.Monad.STM
 import Control.Concurrent
+import Control.Concurrent.STM.TChan
 
 -- websocket stuff
 import qualified Web.Scotty as Sc
@@ -70,6 +72,8 @@ runFileWatcher =
 repl :: IO ()
 repl = forever $ do
   s <- getLine
+  case s of
+    ":q" -> undefined -- write msg kill
   putStrLn $ "> " <> s
 
 --
@@ -77,6 +81,16 @@ repl = forever $ do
 --
 main :: IO ()
 main = do
-  forkIO runFileWatcher
-  forkIO runServer
+  -- setup the channels
+  fromRepl <- atomically (newTChan :: STM (TChan String))
+  toRepl   <- atomically (newTChan :: STM (TChan String))
+
+  fromFileWatcher <- atomically (newTChan :: STM (TChan String))
+
+  fromServer <- atomically (newTChan :: STM (TChan String))
+  toServer   <- atomically (newTChan :: STM (TChan String))
+
+  -- run the stuff
+  fileWatchPid <- forkIO runFileWatcher
+  serverPid    <- forkIO runServer
   repl
