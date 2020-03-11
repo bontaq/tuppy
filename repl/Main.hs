@@ -69,11 +69,12 @@ runFileWatcher =
 --
 -- Repl
 --
-repl :: IO ()
-repl = forever $ do
+repl :: (TChan String) -> IO ()
+repl up = forever $ do
   s <- getLine
   case s of
-    ":q" -> undefined -- write msg kill
+    ":q" -> atomically $ writeTChan up ":q" -- write msg kill
+    _    -> pure ()
   putStrLn $ "> " <> s
 
 --
@@ -93,4 +94,13 @@ main = do
   -- run the stuff
   fileWatchPid <- forkIO runFileWatcher
   serverPid    <- forkIO runServer
-  repl
+  replPid      <- forkIO (repl fromRepl)
+
+  forever $ do
+    msg <- atomically $ readTChan fromRepl
+    case msg of
+      ":q" -> do
+        killThread fileWatchPid
+        killThread serverPid
+        killThread replPid
+        putStrLn "-- shutdown --"
