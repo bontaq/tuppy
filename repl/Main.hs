@@ -33,7 +33,8 @@ wsapp fromControl pending = do
   WS.sendTextData conn $ ("initial> " :: Txt.Text) <> msg
 
   forever $ do
-    WS.sendTextData conn $ ("loop data" :: Txt.Text)
+    msg <- atomically $ readTChan fromControl
+    WS.sendTextData conn $ (Txt.pack msg :: Txt.Text)
     threadDelay $ 1 * 1000000
 
 scottyApp :: IO Wai.Application
@@ -113,4 +114,5 @@ main = do
         putStrLn "-- shutdown --"
       Code s -> do
         putStrLn $ "code " <> s
+        atomically $ writeTChan toServer s
         pure ()
