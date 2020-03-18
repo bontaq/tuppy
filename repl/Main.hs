@@ -23,8 +23,8 @@ import System.FSNotify
 --
 -- Server
 --
-wsapp :: WS.ServerApp
-wsapp pending = do
+wsapp :: TChan String -> WS.ServerApp
+wsapp fromControl pending = do
   putStrLn "ws connected"
   conn <- WS.acceptRequest pending
   WS.forkPingThread conn 30
@@ -45,13 +45,16 @@ scottyApp =
     Sc.get "/" $
       Sc.file "./repl/index.html"
 
-runServer :: IO ()
-runServer = do
+runServer :: (TChan String) -> IO ()
+runServer fromControl = do
   let port = 8000
   let settings = Warp.setPort port Warp.defaultSettings
   sapp <- scottyApp
   Warp.runSettings settings
-    $ WaiWs.websocketsOr WS.defaultConnectionOptions wsapp sapp
+    $ WaiWs.websocketsOr
+    WS.defaultConnectionOptions
+    (wsapp fromControl)
+    sapp
 
 --
 -- Files
@@ -69,12 +72,16 @@ runFileWatcher =
 --
 -- Repl
 --
-repl :: (TChan String) -> IO ()
+data ReplEvent =
+  Command String
+  | Code String
+
+repl :: (TChan ReplEvent) -> IO ()
 repl up = forever $ do
   s <- getLine
   case s of
-    ":q" -> atomically $ writeTChan up ":q" -- write msg kill
-    _    -> pure ()
+    ":q" -> atomically $ writeTChan up (Command ":q") -- write msg kill
+    _    -> atomically $ writeTChan up (Code s)
   putStrLn $ "> " <> s
 
 --
@@ -83,7 +90,7 @@ repl up = forever $ do
 main :: IO ()
 main = do
   -- setup the channels
-  fromRepl <- atomically (newTChan :: STM (TChan String))
+  fromRepl <- atomically (newTChan :: STM (TChan ReplEvent))
   toRepl   <- atomically (newTChan :: STM (TChan String))
 
   fromFileWatcher <- atomically (newTChan :: STM (TChan String))
@@ -93,14 +100,17 @@ main = do
 
   -- run the stuff
   fileWatchPid <- forkIO runFileWatcher
-  serverPid    <- forkIO runServer
+  serverPid    <- forkIO (runServer toServer)
   replPid      <- forkIO (repl fromRepl)
 
   forever $ do
     msg <- atomically $ readTChan fromRepl
     case msg of
-      ":q" -> do
+      Command ":q" -> do
         killThread fileWatchPid
         killThread serverPid
         killThread replPid
         putStrLn "-- shutdown --"
+      Code s -> do
+        putStrLn $ "code " <> s
+        pure ()
