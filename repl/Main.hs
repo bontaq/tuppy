@@ -108,9 +108,7 @@ main = do
     msg <- atomically $ readTChan fromRepl
     case msg of
       Command ":q" -> do
-        killThread fileWatchPid
-        killThread serverPid
-        killThread replPid
+        mapM_ killThread [fileWatchPid, serverPid, replPid]
         putStrLn "-- shutdown --"
       Code s -> do
         putStrLn $ "code " <> s
