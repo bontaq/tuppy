@@ -19,6 +19,10 @@ import qualified Network.Wai.Handler.Warp as Warp
 -- file watching
 import System.FSNotify
 
+-- language
+import Compiler (compile)
+import Parser   (syntax, clex)
+
 
 --
 -- Server
@@ -83,11 +87,13 @@ repl up = forever $ do
   case s of
     ":q" -> atomically $ writeTChan up (Command ":q") -- write msg kill
     _    -> atomically $ writeTChan up (Code s)
-  putStrLn $ "> " <> s
+  -- putStrLn $ "> " <> s
 
 --
 -- Connect the dots
 --
+handleCode = compile . syntax . (clex 0 0)
+
 main :: IO ()
 main = do
   -- setup the channels
@@ -112,5 +118,5 @@ main = do
         putStrLn "-- shutdown --"
       Code s -> do
         putStrLn $ "code " <> s
-        atomically $ writeTChan toServer s
+        atomically $ writeTChan toServer (handleCode s)
         pure ()
