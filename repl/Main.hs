@@ -1,6 +1,9 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
+
+import GHC.Generics
 
 import Control.Monad
 import Control.Monad.STM
@@ -10,6 +13,7 @@ import Control.Concurrent.STM.TChan
 -- websocket stuff
 import qualified Web.Scotty as Sc
 import qualified Data.Text as Txt
+import Data.Text.Lazy.Encoding (decodeUtf8)
 import qualified Network.Wai.Middleware.Gzip as Sc
 import qualified Network.Wai.Handler.WebSockets as WaiWs
 import qualified Network.WebSockets as WS
@@ -23,11 +27,20 @@ import System.FSNotify
 import Compiler (compile)
 import Parser   (syntax, clex)
 
+import Data.Aeson
+
+
+data ServerMsg = ServerMsg {
+  name :: String
+  , code :: String
+  } deriving Generic
+
+instance ToJSON ServerMsg where
 
 --
 -- Server
 --
-wsapp :: TChan String -> WS.ServerApp
+wsapp :: TChan ServerMsg -> WS.ServerApp
 wsapp fromControl pending = do
   putStrLn "ws connected"
   conn <- WS.acceptRequest pending
@@ -38,7 +51,7 @@ wsapp fromControl pending = do
 
   forever $ do
     msg <- atomically $ readTChan fromControl
-    WS.sendTextData conn $ (Txt.pack msg :: Txt.Text)
+    WS.sendTextData conn $ (decodeUtf8 (encode msg))
     threadDelay $ 1 * 1000000
 
 scottyApp :: IO Wai.Application
@@ -50,7 +63,7 @@ scottyApp =
     Sc.get "/" $
       Sc.file "./repl/index.html"
 
-runServer :: (TChan String) -> IO ()
+runServer :: (TChan ServerMsg) -> IO ()
 runServer fromControl = do
   let port = 8000
   let settings = Warp.setPort port Warp.defaultSettings
@@ -103,7 +116,7 @@ main = do
   fromFileWatcher <- atomically (newTChan :: STM (TChan String))
 
   fromServer <- atomically (newTChan :: STM (TChan String))
-  toServer   <- atomically (newTChan :: STM (TChan String))
+  toServer   <- atomically (newTChan :: STM (TChan ServerMsg))
 
   -- run the stuff
   fileWatchPid <- forkIO runFileWatcher
