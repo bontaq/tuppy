@@ -1,6 +1,7 @@
 <html>
   <head>
     <script>
+     var z = undefined;
      function webSocketTest() {
        var ws = new WebSocket("ws://localhost:8000");
 
@@ -10,6 +11,7 @@
 
        ws.onmessage = evt => {
          var m = evt.data;
+         z = new Function("return " + m)();
          console.log( m );
        };
 
