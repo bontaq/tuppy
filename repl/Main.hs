@@ -105,7 +105,17 @@ repl up = forever $ do
 --
 -- Connect the dots
 --
-handleCode = compile . syntax . (clex 0 0)
+handleCode :: String -> ServerMsg
+handleCode raw =
+  let
+    syntax'        = syntax . (clex 0 0) $ raw
+    compiled'      = compile syntax'
+    (fnName, _, _) = head syntax'
+  in
+    ServerMsg {
+      name=fnName
+      , code=compiled'
+    }
 
 main :: IO ()
 main = do
