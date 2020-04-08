@@ -10,9 +10,8 @@
        };
 
        ws.onmessage = evt => {
-         var m = evt.data;
-         z = new Function("return " + m)();
-         console.log( m );
+           var message = JSON.parse(evt.data);
+           z = new Function("return " + m)();
        };
 
        ws.onclose = function() {
