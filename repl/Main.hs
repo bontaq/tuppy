@@ -77,14 +77,19 @@ runServer fromControl = do
 --
 -- Files
 --
+handleFileEvent :: Event -> IO ()
+handleFileEvent event = do
+  putStrLn $ eventPath event
+
 runFileWatcher :: IO ()
 runFileWatcher =
   withManager $ \mgr -> do
     watchDir
       mgr
-      "."
+      "./example-project"
       (const True)
-      print
+      handleFileEvent
+      -- print
     forever $ threadDelay 1000000
 
 --
@@ -130,14 +135,15 @@ main = do
 
   -- run the stuff
   fileWatchPid <- forkIO runFileWatcher
-  serverPid    <- forkIO (runServer toServer)
+  -- serverPid    <- forkIO (runServer toServer)
   replPid      <- forkIO (repl fromRepl)
 
   forever $ do
     msg <- atomically $ readTChan fromRepl
     case msg of
       Command ":q" -> do
-        mapM_ killThread [fileWatchPid, serverPid, replPid]
+        mapM_ killThread [fileWatchPid, replPid]
+        -- mapM_ killThread [fileWatchPid, serverPid, replPid]
         putStrLn "-- shutdown --"
       Code s -> do
         putStrLn $ "code " <> s
