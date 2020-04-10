@@ -77,18 +77,22 @@ runServer fromControl = do
 --
 -- Files
 --
-handleFileEvent :: Event -> IO ()
+handleFileEvent :: EventChannel -> IO ()
 handleFileEvent event = do
-  putStrLn $ eventPath event
+  evt <- readChan event
+  putStrLn . show $ evt
+  handleFileEvent event
 
 runFileWatcher :: IO ()
-runFileWatcher =
+runFileWatcher = do
+  fileEventChan <- newChan
+  forkIO $ handleFileEvent fileEventChan
   withManager $ \mgr -> do
-    watchDir
+    watchDirChan
       mgr
       "./example-project"
       (const True)
-      handleFileEvent
+      fileEventChan
       -- print
     forever $ threadDelay 1000000
 
