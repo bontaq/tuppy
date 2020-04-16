@@ -1,6 +1,7 @@
 <html>
   <head>
     <script>
+     var z = undefined;
      function webSocketTest() {
        var ws = new WebSocket("ws://localhost:8000");
 
@@ -9,8 +10,10 @@
        };
 
        ws.onmessage = evt => {
-         var m = evt.data;
-         console.log( m );
+           var message = JSON.parse(evt.data);
+           console.log(message);
+
+           window[message["name"]] = new Function("return " + message["code"])();
        };
 
        ws.onclose = function() {
