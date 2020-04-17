@@ -46,6 +46,7 @@ library
       , hspec
       , raw-strings-qq
       , optparse-applicative
+      , holmes
   default-language: Haskell2010
 
 executable tuppy
