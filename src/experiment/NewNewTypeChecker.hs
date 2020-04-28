@@ -18,7 +18,9 @@ data Name
   deriving (Show, Eq)
 
 data InferableTerm
-  = Ann CheckableTerm Type
+  = Ann CheckableTerm CheckableTerm
+  | Star
+  | Pi CheckableTerm CheckableTerm
   | Bound Int
   | Free Name
   | InferableTerm :@: CheckableTerm -- infix constructor :@:
@@ -30,13 +32,18 @@ data CheckableTerm
   | Lam CheckableTerm
   deriving (Show, Eq)
 
-data Type
-  = TFree Name
-  | Fun Type Type
-  deriving (Show, Eq)
+-- data Type
+--   = TFree Name
+--   | Fun Type Type
+--   deriving (Show, Eq)
+
+type Type = Value
+type Context = [(Name, Type)]
 
 data Value
   = VLam (Value -> Value)
+  | VStar
+  | VPi Value (Value -> Value)
   | VNeutral Neutral
 
 
@@ -63,6 +70,8 @@ evalInferable term env =
     (Ann e _)  -> evalCheckable e env
     (Free x)   -> vfree x
     (Bound i)  -> env !! i
+    (Star)     -> VStar
+    (Pi t t')  -> VPi (evalCheckable t env) (\x -> evalCheckable t' (x: d))
     (e :@: e') -> vapp (evalInferable e env) (evalCheckable e' env)
 
 vapp :: Value -> Value -> Value
@@ -79,15 +88,15 @@ evalCheckable term env =
 -- Context for typechecking
 --
 
-data Kind = Star
-          deriving Show
+-- data Kind = Star
+--           deriving Show
 
-data Info
-  = HasKind Kind
-  | HasType Type
-  deriving Show
+-- data Info
+--   = HasKind Kind
+--   | HasType Type
+--   deriving Show
 
-type Context = [(Name, Info)]
+-- type Context = [(Name, Info)]
 
 --
 -- Typechecking
@@ -145,6 +154,8 @@ substInfer :: Int -> InferableTerm -> InferableTerm -> InferableTerm
 substInfer i r (Ann e t)  = Ann (substCheck i r e) t
 substInfer i r (Bound j)  = if i == j then r else Bound j
 substInfer i r (Free y)   = Free y
+substInfer i r Star       = Star
+substInfer i r (Pi t t')  = Pi (substCheck i r t) (substCheck (i + 1) r t')
 substInfer i r (e :@: e') = substInfer i r e :@: substCheck i r e'
 
 substCheck :: Int -> InferableTerm -> CheckableTerm -> CheckableTerm
@@ -161,6 +172,8 @@ quote0 = quote 0
 quote :: Int -> Value -> CheckableTerm
 quote i (VLam f)     = Lam (quote (i + 1) (f (vfree (Quote i))))
 quote i (VNeutral n) = Inf (neutralQuote i n)
+quote i VStar        = Inf Star
+quote i (VPi v f)    = Inf (Pi (quite i v) (quote (i + 1) (f (vfree (Quote i)))))
 
 neutralQuote :: Int -> Neutral -> InferableTerm
 neutralQuote i (NFree x)  = boundfree i x
