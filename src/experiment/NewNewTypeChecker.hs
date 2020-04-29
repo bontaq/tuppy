@@ -104,49 +104,55 @@ evalCheckable term env =
 
 type Result a = Either String a
 
-kindCheckable :: Context -> Type -> Kind -> Result ()
-kindCheckable context (TFree x) Star =
-  case lookup x context of
-    Just (HasKind Star) -> return ()
-    Nothing -> throwError "unknown identifier"
-
-kindCheckable context (Fun k k') Star =
-  do
-    kindCheckable context k Star
-    kindCheckable context k' Star
-
 typeInfer0 :: Context -> InferableTerm -> Result Type
 typeInfer0 context term = typeInfer 0 context term
 
 typeInfer :: Int -> Context -> InferableTerm -> Result Type
-typeInfer i context (Ann checkableTerm type') =
+typeInfer i context (Ann checkableTerm p) =
   do
-    kindCheckable context type' Star
+    typeCheckable i context p VStar
+    let type' = evalCheckable p []
     typeCheckable i context checkableTerm type'
     return type'
 
+typeInfer i context Star = return VStar
+
+typeInfer i context (Pi p p') =
+  do
+    typeCheckable i context p VStar
+    let type' = evalCheckable p []
+    typeCheckable
+      (i + 1)
+      ((Local i, type') : context)
+      (substCheck 0 (Free (Local i)) p') VStar
+    return VStar
+
 typeInfer i context (Free x) =
   case lookup x context of
-    Just (HasType t) -> return t
+    Just t -> return t
     Nothing -> throwError "unknown identifier"
 
 typeInfer i context (e :@: e') =
   do
     omega <- typeInfer i context e
     case omega of
-      Fun t t' -> do
+      VPi t t' -> do
         typeCheckable i context e' t
-        return t'
+        return (t' (evalCheckable e' []))
       _ -> throwError "illegal application"
 
 typeCheckable :: Int -> Context -> CheckableTerm -> Type -> Result ()
-typeCheckable i context (Inf e) t =
+typeCheckable i context (Inf e) v =
   do
-    t' <- typeInfer i context e
-    unless (t == t') (throwError "type mismatch")
-typeCheckable i context (Lam e) (Fun t t') =
-  typeCheckable (i + 1) ((Local i, HasType t) : context)
-                (substCheck 0 (Free (Local i)) e) t'
+    v' <- typeInfer i context e
+    unless (quote0 v == quote0 v') (throwError "type mismatch")
+
+typeCheckable i context (Lam e) (VPi t t') =
+  typeCheckable
+    (i + 1)
+    ((Local i, t) : context)
+    (substCheck 0 (Free (Local i)) e) (t' (vfree (Local i)))
+
 typeCheckable i context _ _ =
   throwError "type mistmatch"
 
