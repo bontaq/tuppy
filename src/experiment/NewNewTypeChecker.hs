@@ -46,7 +46,6 @@ data Value
   | VPi Value (Value -> Value)
   | VNeutral Neutral
 
-
 data Neutral
   = NFree Name
   | NApp Neutral Value
@@ -71,7 +70,7 @@ evalInferable term env =
     (Free x)   -> vfree x
     (Bound i)  -> env !! i
     (Star)     -> VStar
-    (Pi t t')  -> VPi (evalCheckable t env) (\x -> evalCheckable t' (x: d))
+    (Pi t t')  -> VPi (evalCheckable t env) (\x -> evalCheckable t' (x : env))
     (e :@: e') -> vapp (evalInferable e env) (evalCheckable e' env)
 
 vapp :: Value -> Value -> Value
@@ -179,7 +178,7 @@ quote :: Int -> Value -> CheckableTerm
 quote i (VLam f)     = Lam (quote (i + 1) (f (vfree (Quote i))))
 quote i (VNeutral n) = Inf (neutralQuote i n)
 quote i VStar        = Inf Star
-quote i (VPi v f)    = Inf (Pi (quite i v) (quote (i + 1) (f (vfree (Quote i)))))
+quote i (VPi v f)    = Inf (Pi (quote i v) (quote (i + 1) (f (vfree (Quote i)))))
 
 neutralQuote :: Int -> Neutral -> InferableTerm
 neutralQuote i (NFree x)  = boundfree i x
@@ -195,24 +194,27 @@ boundfree i x         = Free x
 
 id'     = Lam (Inf (Bound 0))
 const'  = Lam (Lam (Inf (Bound 1)))
-tfree a = TFree (Global a)
+tfree a = Free (Global a)
 free x  = Inf (Free (Global x))
 
-term1= Ann id' (Fun (tfree "a") (tfree "a")) :@: free "y"
+term1 = Ann id' (Inf $ Pi (free "a") (free "a")) :@: free "y"
 
-term2= Ann const' (Fun
-                   (Fun (tfree "b") (tfree "b"))
-                   (Fun (tfree "a") (Fun (tfree "b") (tfree "b"))))
+term2 = Ann const' (Inf $ Pi
+                    (Inf $ Pi (free "b") (free "b"))
+                    (Inf $ Pi (free "a") (Inf $ Pi (free "b") (free "b"))))
   :@: id' :@: free "y"
 
-env1 = [ (Global "y", HasType (tfree "a"))
-       , (Global "a", HasKind Star) ]
-env2 = [ (Global "b", HasKind Star) ] <> env1
+env1 :: Context
+env1 = [ (Global "y", VNeutral (NFree $ Global "a"))
+       , (Global "a", VStar) ]
+env2 :: Context
+env2 = [ (Global "b", VStar) ] <> env1
 
 -- quote0 (evalInferable term1 [])
 -- > Inf (Free (Global "y"))
 -- quote0 (evalInferable term2 [])
 -- > Lam (Inf (Bound 0))
+
 -- typeInfer0 env1 term1
 -- > Right (TFree (Global "a"))
 -- typeInfer0 env2 term2
