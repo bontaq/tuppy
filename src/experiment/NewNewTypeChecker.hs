@@ -7,6 +7,9 @@ import Control.Monad.Except
 -- A tutorial implementation of a dependently typed lambda calculus
 --
 
+-- https://github.com/Ralith/tisp/blob/475a1d22ba37939328b2fe51faa49422f6981b95/src/Tisp/Value.hs#L28
+-- https://github.com/chameco/bramble/blob/master/src/Bramble/Core/Calculus.hs
+
 --
 -- The basics for terms?
 --
