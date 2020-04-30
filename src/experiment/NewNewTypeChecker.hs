@@ -40,11 +40,15 @@ data CheckableTerm
 type Type = Value
 type Context = [(Name, Type)]
 
+data Literal = LitNum String
+             | LitText String
+
 data Value
   = VLam (Value -> Value)
   | VStar
   | VPi Value (Value -> Value)
   | VNeutral Neutral
+  | VLiteral Literal
 
 data Neutral
   = NFree Name
