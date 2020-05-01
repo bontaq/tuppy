@@ -47,6 +47,7 @@ data Value
   = VLam (Value -> Value)
   | VStar
   | VPi Value (Value -> Value)
+  | VLit
   | VNeutral Neutral
 
 instance Show Value where
@@ -140,6 +141,8 @@ typeInfer i context (Free x) =
     Just t -> return t
     Nothing -> throwError "unknown identifier"
 
+typeInfer i context (LitText _) = return VLit
+
 typeInfer i context (e :@: e') =
   do
     omega <- typeInfer i context e
@@ -188,6 +191,7 @@ quote i (VLam f)     = Lam (quote (i + 1) (f (vfree (Quote i))))
 quote i (VNeutral n) = Inf (neutralQuote i n)
 quote i VStar        = Inf Star
 quote i (VPi v f)    = Inf (Pi (quote i v) (quote (i + 1) (f (vfree (Quote i)))))
+quote i VLit         = Inf (LitText "string")
 
 neutralQuote :: Int -> Neutral -> InferableTerm
 neutralQuote i (NFree x)  = boundfree i x
