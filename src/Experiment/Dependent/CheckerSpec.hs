@@ -12,4 +12,4 @@ spec = do
     it "works" $ do
       typeInfer0 [] (LitText "hello")
         `shouldBe`
-        (Right (VStar))
+        Right VLit
