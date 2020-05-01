@@ -45,6 +45,7 @@ type Context = [(Name, Type)]
 
 data Literal = LitNum String
              | LitText String
+             deriving Show
 
 data Value
   = VLam (Value -> Value)
