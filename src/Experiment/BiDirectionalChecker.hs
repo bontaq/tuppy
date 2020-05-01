@@ -1,4 +1,4 @@
-module BiDirectionalChecker where
+module Experiment.BiDirectionalChecker where
 
 --
 -- Language

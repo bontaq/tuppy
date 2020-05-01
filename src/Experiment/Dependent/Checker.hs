@@ -1,4 +1,4 @@
-module NewNewTypeChecker where
+module Experiment.Dependent.Checker where
 
 import Control.Monad.Except
 
@@ -26,6 +26,7 @@ data InferableTerm
   | Pi CheckableTerm CheckableTerm
   | Bound Int
   | Free Name
+  | LitText String
   | InferableTerm :@: CheckableTerm -- infix constructor :@:
                                     -- denotes application?
   deriving (Show, Eq)
@@ -35,24 +36,24 @@ data CheckableTerm
   | Lam CheckableTerm
   deriving (Show, Eq)
 
--- data Type
---   = TFree Name
---   | Fun Type Type
---   deriving (Show, Eq)
-
 type Type = Value
 type Context = [(Name, Type)]
 
-data Literal = LitNum String
-             | LitText String
-             deriving Show
+-- data Literal = LitNum String
+--              | LitText String
+--              deriving Show
 
 data Value
   = VLam (Value -> Value)
   | VStar
   | VPi Value (Value -> Value)
   | VNeutral Neutral
-  | VLiteral Literal
+
+instance Show Value where
+  show = show . quote0
+
+instance Eq Value where
+  a == b = (show a) == (show b)
 
 data Neutral
   = NFree Name
