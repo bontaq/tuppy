@@ -10,6 +10,9 @@ import Control.Monad.Except
 -- https://github.com/Ralith/tisp/blob/475a1d22ba37939328b2fe51faa49422f6981b95/src/Tisp/Value.hs#L28
 -- https://github.com/chameco/bramble/blob/master/src/Bramble/Core/Calculus.hs
 
+-- https://www.andres-loeh.de/LambdaPi/
+-- https://www.andres-loeh.de/LambdaPi/LambdaPi-README
+
 --
 -- The basics for terms?
 --
@@ -139,7 +142,7 @@ typeInfer i context (Pi p p') =
 typeInfer i context (Free x) =
   case lookup x context of
     Just t -> return t
-    Nothing -> throwError "unknown identifier"
+    Nothing -> throwError $ "unknown identifier " <> show x
 
 typeInfer i context (LitText _) = return VLit
 
@@ -156,7 +159,11 @@ typeCheckable :: Int -> Context -> CheckableTerm -> Type -> Result ()
 typeCheckable i context (Inf e) v =
   do
     v' <- typeInfer i context e
-    unless (quote0 v == quote0 v') (throwError "type mismatch")
+    unless (quote0 v == quote0 v')
+      (throwError $ "type mismatch: "
+       <> (show $ quote0 v)
+       <> " "
+       <> (show $ quote0 v'))
 
 typeCheckable i context (Lam e) (VPi t t') =
   typeCheckable
@@ -165,7 +172,7 @@ typeCheckable i context (Lam e) (VPi t t') =
     (substCheck 0 (Free (Local i)) e) (t' (vfree (Local i)))
 
 typeCheckable i context _ _ =
-  throwError "type mistmatch"
+  throwError "type mistmatch 2"
 
 substInfer :: Int -> InferableTerm -> InferableTerm -> InferableTerm
 substInfer i r (Ann e t)  = Ann (substCheck i r e) t
@@ -205,12 +212,12 @@ boundfree i x         = Free x
 -- Examples
 --
 
-id'     = Lam (Inf (Bound 0))
+id'     = Lam (Lam (Inf (Bound 0)))
 const'  = Lam (Lam (Inf (Bound 1)))
 tfree a = Free (Global a)
 free x  = Inf (Free (Global x))
 
-term1 = Ann id' (Inf $ Pi (free "a") (free "a")) :@: free "y"
+term1 = Ann id' (Inf $ Pi (free "a") (free "a")) -- :@: free "y"
 
 term2 = Ann const' (Inf $ Pi
                     (Inf $ Pi (free "b") (free "b"))
@@ -232,3 +239,7 @@ env2 = [ (Global "b", VStar) ] <> env1
 -- > Right (TFree (Global "a"))
 -- typeInfer0 env2 term2
 -- > Right (Fun (TFree (Global "b")) (TFree (Global "b")))
+
+data Command =
+  | CommandHandler Command.A Command.B
+  |
