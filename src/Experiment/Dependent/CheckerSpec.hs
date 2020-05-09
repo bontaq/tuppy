@@ -23,10 +23,9 @@ spec = do
     it "works when applied" $ do
       let
         -- Ann_ (Lam_ (Lam_ (Inf_ (Bound_ 0)))) (Inf_ (Pi_ (Inf_ Star_) (Inf_ (Pi_ (Inf_ (Bound_ 0)) (Inf_ (Bound_ 1))))))
-        id'' = Ann id' (Inf $ Pi (free "a") (free "a")) -- :@: free "y"
-      typeInfer0 [ (Global "string", VStar)
-                 , (Global "string", VStar)
-                 , (Global "y", VNeutral (NFree $ Global "string"))]
+        id'' = Ann (Lam (Lam (Inf (Bound 0)))) (Inf (Pi (Inf Star) (Inf (Pi (Inf (Bound 0)) (Inf (Bound 1))))))
+        -- id'' = Ann id' (Inf $ Pi (free "a") (free "a")) -- :@: free "y"
+      typeInfer0 []
         (id'' :@: free "y")
       `shouldBe`
       Right VLit

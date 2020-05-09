@@ -239,7 +239,3 @@ env2 = [ (Global "b", VStar) ] <> env1
 -- > Right (TFree (Global "a"))
 -- typeInfer0 env2 term2
 -- > Right (Fun (TFree (Global "b")) (TFree (Global "b")))
-
-data Command =
-  | CommandHandler Command.A Command.B
-  |
