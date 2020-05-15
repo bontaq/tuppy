@@ -53,7 +53,7 @@
           x <- identifier simplyTyped
           reserved simplyTyped "="
           t <- parseITerm 0 e
-          error $ show t
+          -- trace "alo" $ parseITerm 0 e
           return (Let x t)
     <|> do
           reserved simplyTyped "assume"
@@ -177,7 +177,7 @@
           x <- identifier lambdaPi
           reserved lambdaPi "="
           t <- parseITerm_ 0 e
-          error $ show t
+          trace (show t) $ reserved lambdaPi ""
           return (Let x t)
     <|> do
           reserved lambdaPi "assume"

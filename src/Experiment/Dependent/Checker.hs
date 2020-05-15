@@ -160,9 +160,9 @@ typeCheckable i context (Inf e) v =
   do
     v' <- typeInfer i context e
     unless (quote0 v == quote0 v')
-      (throwError $ "type mismatch: "
+      (throwError $ "type mismatch: v: "
        <> (show $ quote0 v)
-       <> " "
+       <> " v': "
        <> (show $ quote0 v'))
 
 typeCheckable i context (Lam e) (VPi t t') =
