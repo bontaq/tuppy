@@ -126,21 +126,31 @@ test = apply id id 1
       `shouldBe`
        "Ok: [(\"apply\",Scheme [[0],[2],[4],[6],[8]] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]],TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]]])),(\"id\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"test\",Scheme [] (TypeConstructor \"int\" []))]"
 
-  it "works with an annotated type" $ do
-    runTest
-      []
-      [r|
-main : a
-main x = x
-        |]
-      `shouldBe`
-      "Ok: [(\"main\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]]))]"
+    it "works with an annotated type" $ do
+      runTest
+        []
+        [r|
+          main : a
+          main x = x
+          |]
+          `shouldBe`
+          "Ok: [(\"main\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]]))]"
 
-  it "works for an if then else" $ do
-    runTest
-      [(nameToNumber "greaterThan", Scheme [] (arrow int (arrow int int)))]
-      [r|
-max x y = greaterThan x y
-        |]
-      `shouldBe`
-      "Ok: [(\"greaterThan\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"max\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]]))]"
+  describe "ifThenElse" $ do
+    it "fails if cond is not bool" $ do
+      runTest
+        [(nameToNumber "greaterThan", Scheme [] (arrow int (arrow int int)))]
+        [r|
+          max x y = if greaterThan x y then x else y
+          |]
+          `shouldBe`
+          "Failed: \"Cond is not bool: Could not unify: TCN: int TS: [] TCN: bool TS: []lambda failedlambda failed : could not typecheck\""
+
+    it "works for an if then else" $ do
+      runTest
+        [(nameToNumber "greaterThan", Scheme [] (arrow int (arrow int bool)))]
+        [r|
+          max x y = if greaterThan x y then x else y
+          |]
+          `shouldBe`
+          "Ok: [(\"greaterThan\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"bool\" []]])),(\"max\",Scheme [[0],[2],[4]] (TypeConstructor \"arrow\" [TypeVar [0],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]]))]"

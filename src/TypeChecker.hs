@@ -33,6 +33,9 @@ int = TypeConstructor "int" []
 string :: TypeExpression
 string = TypeConstructor "string" []
 
+bool :: TypeExpression
+bool = TypeConstructor "bool" []
+
 cross :: TypeExpression -> TypeExpression -> TypeExpression
 cross t1 t2 = TypeConstructor "cross" [t1, t2]
 
@@ -75,7 +78,7 @@ scompose sub2 sub1 tvn = subType sub2 (sub1 tvn)
 extend :: Subst -> TypeVarName -> TypeExpression -> Reply Subst String
 extend phi tvn t
   | t == TypeVar tvn        = Ok phi
-  | tvn `elem` typeVarsIn t = Failure ""
+  | tvn `elem` typeVarsIn t = Failure "extend failed"
   | otherwise =
       Ok ((delta tvn t) `scompose` phi)
 
@@ -218,7 +221,7 @@ typeCheckLambda gamma ns x e =
     gamma' = newBVar (x, tvn) : gamma
     tvn = nextName ns
 
-typeCheckLambda1 tvn (Failure _) = Failure ""
+typeCheckLambda1 tvn (Failure e) = Failure $ e <> "lambda failed"
 typeCheckLambda1 tvn (Ok (phi, t)) =
   Ok (phi, (phi tvn) `arrow` t)
 
@@ -255,8 +258,20 @@ typeCheckLet2 phi (Failure _) = Failure "failed in let2"
 typeCheckLet2 phi (Ok (phi', t))
   = Ok (phi' `scompose` phi, t)
 
-typeCheckIfThenElse gamma ns a b c =
-  undefined
+typeCheckIfThenElse gamma ns cond leftHand rightHand =
+  -- check that a is bool
+  let condInferred = typeCheck gamma ns cond
+      -- condChecked = case condInferred of
+      --   Ok (phi, tyExpr) -> unify (idSubstitution) (tyExpr, bool)
+      --   Failure e -> Failure e
+  in
+    case condInferred of
+        Ok (phi, tyExpr) ->
+          let maybeSubst = unify idSubstitution (tyExpr, bool)
+          in case maybeSubst of
+            Ok subst -> Ok (subst, subst ns)
+            Failure e -> Failure $ "Cond is not bool: " <> e
+        Failure e -> Failure $ "Hmm " <> e
 
 -- addDeclarations is to update the type environment, gamma,
 -- so that it associates schematic types from the types ts with
