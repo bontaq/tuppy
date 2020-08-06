@@ -44,7 +44,7 @@ spec = do
         [(nameToNumber "multiply", Scheme [] (arrow int (arrow int int)))]
         "main = multiply 3 3"
       `shouldBe`
-      "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
+      "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
 
     it "fails for bad multiply" $ do
       runTest
@@ -60,7 +60,7 @@ spec = do
         , Scheme [] (arrow int (arrow int int))) ]
         "test = 1 \nmain = multiply test"
       `shouldBe`
-        "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"test\",Scheme [] (TypeConstructor \"int\" [])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"test\",Scheme [] (TypeConstructor \"int\" [])),(\"main\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]))]"
+        "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"test\",Scheme [] (TypeConstructor \"int\" [])),(\"main\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]))]"
 
     it "works for more complicated multiple lines" $ do
       runTest
@@ -68,7 +68,7 @@ spec = do
         , Scheme [] (arrow int (arrow int int))) ]
         "square x = multiply x x\nmain = square 2"
       `shouldBe`
-        "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"square\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"square\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []])),(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
+        "Ok: [(\"multiply\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"square\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []])),(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
 
 
     it "works for double application" $ do
@@ -88,7 +88,7 @@ id x = x
 main = id id 1
           |]
         `shouldBe`
-        "Ok: [(\"id\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"id\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
+        "Ok: [(\"id\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"main\",Scheme [] (TypeConstructor \"int\" []))]"
 
     it "works for const" $ do
       runTest
@@ -99,7 +99,7 @@ const x y = y
 main = const 2 "dog"
           |]
         `shouldBe`
-        "Ok: [(\"const\",Scheme [[0],[2]] (TypeConstructor \"arrow\" [TypeVar [0],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [2]]])),(\"const\",Scheme [[0],[2]] (TypeConstructor \"arrow\" [TypeVar [0],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [2]]])),(\"main\",Scheme [] (TypeConstructor \"string\" []))]"
+        "Ok: [(\"const\",Scheme [[0],[2]] (TypeConstructor \"arrow\" [TypeVar [0],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [2]]])),(\"main\",Scheme [] (TypeConstructor \"string\" []))]"
 
 
     it "works for let id" $ do
@@ -124,7 +124,7 @@ id x = x
 test = apply id id 1
          |]
       `shouldBe`
-       "Ok: [(\"apply\",Scheme [[0],[2],[4],[6],[8]] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]],TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]]])),(\"apply\",Scheme [[0],[2],[4],[6],[8]] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]],TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]]])),(\"id\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"apply\",Scheme [[0],[2],[4],[6],[8]] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]],TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]]])),(\"apply\",Scheme [[0],[2],[4],[6],[8]] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]],TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]]])),(\"id\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"test\",Scheme [] (TypeConstructor \"int\" []))]"
+       "Ok: [(\"apply\",Scheme [[0],[2],[4],[6],[8]] (TypeConstructor \"arrow\" [TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]],TypeConstructor \"arrow\" [TypeVar [4],TypeConstructor \"arrow\" [TypeVar [0],TypeVar [2]]]])),(\"id\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"test\",Scheme [] (TypeConstructor \"int\" []))]"
 
   it "works with an annotated type" $ do
     runTest
@@ -135,3 +135,12 @@ main x = x
         |]
       `shouldBe`
       "Ok: [(\"main\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]]))]"
+
+  it "works for an if then else" $ do
+    runTest
+      [(nameToNumber "greaterThan", Scheme [] (arrow int (arrow int int)))]
+      [r|
+max x y = greaterThan x y
+        |]
+      `shouldBe`
+      "Ok: [(\"greaterThan\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]])),(\"max\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"int\" []]]))]"
