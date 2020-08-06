@@ -1,0 +1,95 @@
+> module Experiment.Liquid.Checker where
+
+We're going to walk through the steps for liquid types,
+as proposed by:
+
+http://goto.ucsd.edu/~rjhala/liquid/liquid_types.pdf
+
+This particular example should infer, for max, that
+the type is constrained to never lower than the lower
+integer.
+
+Our existing hindley-milner inference:
+
+> import Experiment.Liquid.HM
+
+Our existing language, only starting with the subset of
+
+data Expr a
+  = ENum Int
+  | EVar String
+  | EAp (Expr a) (Expr a)
+
+> import Language
+> import Parser
+
+Just a helper to take us from something like:
+
+"main = max"
+
+to:
+
+[("main", [], EVar "max")]
+
+> syntax' :: String -> Language.CoreProgram
+> syntax' = syntax . clex 0 0
+
+1.
+
+Here is our starting point from the paper:
+run HM inference -- it doesn't really do anything besides
+assign the type of max from the type environment to the
+supercombinator max
+
+> inferredMax = runTypeCheck
+>   (syntax' "max = max")
+>   [("max", Scheme [] (arrow int (arrow int int)))]
+
+Running that gives us
+
+[("max",
+  Scheme []
+  (TypeConstructor "arrow"
+   [TypeConstructor "int" []
+   ,TypeConstructor "arrow"
+    [TypeConstructor "int" []
+    ,TypeConstructor "int" []]]))]
+
+Which if you squint a bit can be read as
+max :: int -> int -> int
+
+next up:
+
+""Using this type, we create a template for the
+  liquid type of max, x:κx→y:κy→κ1, where κx, κy, κ1
+  are liquid type variables representing the unknown
+  refinements for the formals x, y and the body of max""
+
+since I don't know how this will work out, let's try
+
+> type LiquidTypeVars = [Int]
+>
+> collectInts :: TypeExpression -> [String]
+> collectInts (TypeConstructor "arrow" rest) =
+>   [] <> (concat $ fmap collectInts rest)
+> collectInts (TypeConstructor name rest) =
+>   [name]
+>
+> toTemplate :: (String, TypeScheme) -> (String, LiquidTypeVars)
+> toTemplate (name, (Scheme typeVars expr)) =
+>   (name, (numberizeCollected $ collectInts expr))
+>   where
+>     numberizeCollected n = [0..(length n - 1)]
+>
+> liquidTypeVars = fmap toTemplate inferredMax
+
+now:
+
+liquidTypeVars = [("max", [0, 1, 2])]
+
+alright, so our "template" is just a unique list of ints counting up.
+so now kx = 0, (variable x)
+       ky = 1, (variable y)
+       k1 = 2  (body of max)
+
+on to step 2!

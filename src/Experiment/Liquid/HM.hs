@@ -3,6 +3,7 @@ module Experiment.Liquid.HM where
 import Language
 import Parser
 import Debug.Trace
+import Data.List
 
 type TypeVarName = [Int]
 type VExpr = CoreExpr
@@ -175,7 +176,7 @@ typeCheck ::
   NameSupply ->
   VExpr ->
   Reply (Subst, TypeExpression) String
-typeCheck gamma ns x | trace ("Gamma " <> show gamma <> "\nNS " <> show ns <> "\nX " <> show x <> "\n") False = undefined
+-- typeCheck gamma ns x | trace ("Gamma " <> show gamma <> "\nNS " <> show ns <> "\nX " <> show x <> "\n") False = undefined
 typeCheck gamma ns (EVar x) = typeCheckVar gamma ns x
 typeCheck gamma ns (ENum x) = typeCheckNum gamma ns x
 typeCheck gamma ns (EStr x) = typeCheckStr gamma ns x
@@ -189,7 +190,7 @@ typeCheck gamma ns (ELet isRec xs e) = typeCheckLet gamma ns xs e
 typeCheck gamma ns (Ann _ t e) = typeCheck gamma ns e
 -- typeCheck _ _ e = error $ "No good: " <> show e
 
-typeCheckAp typeenv ns e1 e2 | trace (show typeenv) False = undefined
+-- typeCheckAp typeenv ns e1 e2 | trace (show typeenv) False = undefined
 typeCheckAp gamma ns e1 e2 =
   typeCheckAp1 tvn (typeCheckList gamma ns' [e1, e2])
   where
@@ -353,7 +354,7 @@ compose :: Foldable t => t (b -> b) -> b -> b
 compose fs v = foldl (flip (.)) id fs $ v
 
 arrowize :: CoreScDefn -> Reply (Subst, TypeExpression) b -> TypeEnv
-arrowize te (Ok (s, t)) | trace ("CoreSC: " <> show te <> " EX: " <> show t) False = undefined
+-- arrowize te (Ok (s, t)) | trace ("CoreSC: " <> show te <> " EX: " <> show t) False = undefined
 arrowize (name, vars, _) (Ok (s, t)) = case length vars of
   _ -> addDeclarations [] [0] [name] [t]
 
@@ -363,7 +364,7 @@ transformExpr coreSc@(name, vars, expr) =
     0 -> coreSc
 
 typeCheckCore' :: TypeEnv -> CoreScDefn -> Reply TypeEnv String
-typeCheckCore' te ex | trace ("TE: " <> show te <> " EX: " <> show ex) False = undefined
+-- typeCheckCore' te ex | trace ("TE: " <> show te <> " EX: " <> show ex) False = undefined
 typeCheckCore' typeEnv coreExpr =
   let
     getName (name, _, _) = name
@@ -398,10 +399,22 @@ typeCheckCore cp typeEnv =
             case typeEnv' of
               Ok te ->
                 case (typeCheckCore' te superCombinator) of
-                  Ok t -> Ok $ te <> t
+                  Ok t -> Ok $ nub $ te <> t
                   Failure f -> Failure f
               Failure f -> Failure f
           ) (Ok typeEnv) cp
+
+runTypeCheck
+  :: Foldable t => t CoreScDefn
+  -> [(String, TypeScheme)]
+  -> [(String, TypeScheme)]
+runTypeCheck cp typeEnv = namifyFinalEnv $ typeCheckCore cp typeEnv'
+  where
+    typeEnv' = fmap (\(n, ty) -> (nameToNumber n, ty)) typeEnv
+    namifyFinalEnv env =
+      case env of
+        Ok a -> fmap (\(n, ty) -> (numberToName n, ty)) a
+        Failure b -> error "freakout"
 
 -- helper for use with ghci
 runTest' test =
