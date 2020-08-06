@@ -101,4 +101,4 @@ on to step 2!
   respectively x, y, have types that are subtypes of the entire
   body’s type""
 
-So, constraint generation
+So, constraint generation.

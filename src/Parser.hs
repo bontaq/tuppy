@@ -138,6 +138,22 @@ pThen4 combine p1 p2 p3 p4 toks =
                                  , (v3, toks3) <- p3 toks2
                                  , (v4, toks4) <- p4 toks3 ]
 
+pThen5 combine p1 p2 p3 p4 p5 toks =
+  [ (combine v1 v2 v3 v4 v5, toks5) | (v1, toks1) <- p1 toks
+                                    , (v2, toks2) <- p2 toks1
+                                    , (v3, toks3) <- p3 toks2
+                                    , (v4, toks4) <- p4 toks3
+                                    , (v5, toks5) <- p5 toks4]
+
+pThen6 combine p1 p2 p3 p4 p5 p6 toks =
+  [ (combine v1 v2 v3 v4 v5 v6, toks6)
+  | (v1, toks1) <- p1 toks
+  , (v2, toks2) <- p2 toks1
+  , (v3, toks3) <- p3 toks2
+  , (v4, toks4) <- p4 toks3
+  , (v5, toks5) <- p5 toks4
+  , (v6, toks6) <- p6 toks5]
+
 -- recognize zero or more of a parser
 pZeroOrMore :: Parser a -> Parser [a]
 pZeroOrMore p = pOneOrMore p `pAlt` pEmpty []
@@ -211,6 +227,15 @@ pLambda = pThen4 mkLambda (pLit "\\") (pOneOrMore pVar) (pLit "->") pExpr
   where
     mkLambda _ vars _ e = ELam vars e
 
+pIf :: Parser CoreExpr
+pIf = pThen6 mkIf
+  (pLit "if") pExpr
+  (pLit "then") pExpr
+  (pLit "else") pExpr
+  where
+    mkIf _ ifExpr _ thenExpr _ elseExpr =
+      EIf  ifExpr thenExpr elseExpr
+
 pType :: Parser Type
 pType = pThen3 mkType pVar (pLit ":") (pOneOrMoreWithSep pVar (pLit "->"))
   where
@@ -223,6 +248,7 @@ pType = pThen3 mkType pVar (pLit ":") (pOneOrMoreWithSep pVar (pLit "->"))
 pAexpr :: Parser CoreExpr
 pAexpr =
   pApply pNum ENum
+  `pAlt` pIf
   `pAlt` pStr
   `pAlt` pLambda
   `pAlt` pApply pVar EVar

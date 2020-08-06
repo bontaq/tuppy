@@ -18,6 +18,7 @@ data Expr a
     IsRec                 ---- boolean with True = recursive
     [(a, Expr a)]         ---- definitions
     (Expr a)              ---- body of let(rec)
+  | EIf (Expr a) (Expr a) (Expr a)
 
   -- TODO: | Ann (Expr a) Type
   | Ann a Type (Expr a)

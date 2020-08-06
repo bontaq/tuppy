@@ -190,3 +190,25 @@ main =
       syntax toks
       `shouldBe`
       [("main",[],Ann "main" (Fun (TFree "a") (Fun (TFree "b") (TFree "c"))) (ENum 1))]
+
+    it "can parse an if then else statement" $ do
+      let toks = clex 0 0 "main = if == a 1 then 2 else 3"
+      syntax toks
+      `shouldBe`
+      [("main",[],
+        EIf
+        (EAp (EAp (EVar "==") (EVar "a")) (ENum 1))
+        (ENum 2)
+        (ENum 3)
+       )]
+
+    it "can parse the max if else statement" $ do
+      let toks = clex 0 0 "max x y = if > x y then x else y"
+      syntax toks
+      `shouldBe`
+      [("max",[],
+        ELam ["x"]
+        (ELam ["y"]
+         (EIf (EAp (EAp (EVar ">") (EVar "x")) (EVar "y"))
+          (EVar "x")
+          (EVar "y"))))]
