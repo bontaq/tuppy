@@ -81,6 +81,7 @@ since I don't know how this will work out, let's try
 >   where
 >     numberizeCollected n = [0..(length n - 1)]
 >
+> liquidTypeVars :: [(String, LiquidTypeVars)]
 > liquidTypeVars = fmap toTemplate inferredMax
 
 now:
@@ -93,3 +94,11 @@ so now kx = 0, (variable x)
        k1 = 2  (body of max)
 
 on to step 2!
+
+""As the body is an if expression, our algorithm generates the
+  following two constraints that stipulate that, under the
+  appropriate branch condition, the then and else expressions,
+  respectively x, y, have types that are subtypes of the entire
+  body’s type""
+
+So, constraint generation
