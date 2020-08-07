@@ -284,9 +284,9 @@ typeCheckIfThenElse gamma ns cond leftHand rightHand =
   in
     case (Ok s5) of
       Ok subst -> Ok (s5
-                      -- `scompose` subst
-                      -- `scompose` s3
-                      -- `scompose` s2
+                      `scompose` subst
+                      `scompose` s3
+                      `scompose` s2
                       -- `scompose` s1
                      , s5 ns)
       Failure e -> Failure $ "Cond is not bool: " <> e

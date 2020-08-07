@@ -170,10 +170,10 @@ spec = do
 
     it "works for an if then else" $ do
       runTest
-        [(nameToNumber "even", Scheme [] (arrow int bool))]
+        [(nameToNumber "greaterThan", Scheme [] (arrow int (arrow int bool)))]
         [r|
 id x = x
-max z n = if even 4 then id z else id n
+max z n = if greaterThan z n then id z else id n
 test = max 1 2
           |]
           `shouldBe`
