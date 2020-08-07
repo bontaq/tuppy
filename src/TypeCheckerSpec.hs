@@ -136,40 +136,34 @@ spec = do
 --           `shouldBe`
 --           "Ok: [(\"main\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]]))]"
 
---   describe "ifThenElse" $ do
---     it "fails if cond is not bool" $ do
---       runTest
---         [(nameToNumber "greaterThan", Scheme [] (arrow int (arrow int int)))]
---         [r|
---           max x y = if greaterThan x y then x else y
---           |]
---           `shouldBe`
---           "Failed: \"Cond is not bool: Could not unify: TCN: int TS: [] TCN: bool TS: []lambda failedlambda failed : could not typecheck\""
+  describe "ifThenElse" $ do
+    -- it "fails if cond is not bool" $ do
+    --   runTest
+    --     [(nameToNumber "greaterThan", Scheme [] (arrow int (arrow int int)))]
+    --     [r|
+    --       max x y = if greaterThan x y then x else y
+    --       |]
+    --       `shouldBe`
+    --       "Failed: \"Cond is not bool: Could not unify: TCN: int TS: [] TCN: bool TS: []lambda failedlambda failed : could not typecheck\""
 
---     it "works for an if then else" $ do
---       runTest
---         [(nameToNumber "greaterThan", Scheme [] (arrow int (arrow int bool)))]
---         [r|
--- max x y = if greaterThan x y then x else y
---           |]
---           `shouldBe`
---           "Ok: [(\"greaterThan\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"bool\" []]])),(\"max\",Scheme [[0],[2],[4]] (TypeConstructor \"arrow\" [TypeVar [0],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]]))]"
+    it "works for an if then else" $ do
+      runTest
+        [(nameToNumber "greaterThan", Scheme [] (arrow int (arrow int bool)))]
+        [r|
+id x = x
+max x y = if greaterThan x y then id x else id y
+test = max 1 2
+          |]
+          `shouldBe`
+          "Ok: [(\"greaterThan\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"bool\" []]])),(\"max\",Scheme [[0],[2],[4]] (TypeConstructor \"arrow\" [TypeVar [0],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]]))]"
 
 --     it "works for an even check" $ do
 --       runTest
 --         [(nameToNumber "even", Scheme [] (arrow int bool))]
 --         [r|
--- max x = if even x then 1 else 2
+-- id x = x
+-- max = if even 4 then id 1 else id 2
+-- test = even max
 --           |]
---           `shouldBe`
---           "Ok: [(\"greaterThan\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"bool\" []]])),(\"max\",Scheme [[0],[2],[4]] (TypeConstructor \"arrow\" [TypeVar [0],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]]))]"
-
-    it "works for an even check" $ do
-      runTest
-        [(nameToNumber "even", Scheme [] (arrow int bool))]
-        [r|
-id x = x
-max = if even 4 then id 1 else id 2
-          |]
-        `shouldBe`
-        "Ok: [(\"even\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"bool\" []])),(\"id\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"max\",Scheme [] (TypeConstructor \"int\" []))]"
+--         `shouldBe`
+--         "Ok: [(\"even\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"bool\" []])),(\"id\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"max\",Scheme [] (TypeConstructor \"int\" [])),(\"test\",Scheme [] (TypeConstructor \"bool\" []))]"
