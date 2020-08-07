@@ -11,6 +11,8 @@
   Sound and Complete Bidirectional Typechecking for
   Higher-Rank Polymorphism with Existentials and Indexed Types
   https://arxiv.org/pdf/1601.05106.pdf
+* TypeChecker
+** Fix it so if greaterThan 1 2 then 1 else 2 works
 * Mon 10 Feb 2020 09:22:48 PM EST
 ** fix so multi-let statements work
 * Fri 03 Jan 2020 10:39:48 PM EST
