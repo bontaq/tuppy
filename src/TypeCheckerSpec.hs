@@ -184,7 +184,8 @@ spec = do
         [(nameToNumber "greaterThan", Scheme [] (arrow int (arrow int bool)))]
         [r|
 id x = x
-max = if greaterThan 1 2 then id 3 else id 4
+max a b = if greaterThan a b then id a else id b
+test = max 1 2
           |]
           `shouldBe`
           "Ok: [(\"greaterThan\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"bool\" []]])),(\"max\",Scheme [[0],[2],[4]] (TypeConstructor \"arrow\" [TypeVar [0],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]]))]"
