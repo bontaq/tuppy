@@ -1,4 +1,4 @@
-{-# LANGUAGE Strict #-}
+-- {-# LANGUAGE Strict #-}
 module TypeChecker where
 
 import Language
@@ -111,6 +111,7 @@ unify phi ((TypeConstructor tcn ts), (TypeConstructor tcn' ts'))
   | otherwise = Failure $ "Could not unify: TCN: " <> tcn <> " TS: " <> show ts <> " TCN: " <> tcn' <> " TS: " <> show ts'
 
 unifyl :: Subst -> [(TypeExpression, TypeExpression)] -> Reply Subst String
+unifyl _ te | trace ("unfyl: " <> show te) False = undefined
 unifyl phi eqns = foldr unify' (Ok phi) eqns
   where
     unify' eqn (Ok phi)    = unify phi eqn
@@ -121,11 +122,13 @@ data TypeScheme = Scheme [TypeVarName] TypeExpression
                   deriving (Show, Eq)
 
 unknownScheme :: TypeScheme -> [TypeVarName]
+unknownScheme ts | trace ("unknownScheme: " <> show ts) False = undefined
 unknownScheme (Scheme scvs t) =
   let tvars = typeVarsIn t
   in filter (\x -> not $ x `elem` scvs) tvars
 
 subScheme :: Subst -> TypeScheme -> TypeScheme
+subScheme _ ts | trace ("subScheme: " <> show ts) False = undefined
 subScheme phi (Scheme scvs t) =
   Scheme scvs (subType (exclude phi scvs) t)
   where
@@ -275,16 +278,16 @@ typeCheckIfThenElse gamma ns cond leftHand rightHand =
   let (Ok (s1, condInferred)) = typeCheck gamma ns cond
       (Ok (s2, leftHandInferred)) = typeCheck gamma ns leftHand
       (Ok (s3, rightHandInferred)) = typeCheck gamma ns rightHand
-      maybeSubst = unify idSubstitution (condInferred, bool)
+      -- maybeSubst = unify idSubstitution (condInferred, bool)
       (Ok s5) = -- error "fuck"
         unify s2 (leftHandInferred, rightHandInferred)
   in
-    case maybeSubst of
+    case (Ok s5) of
       Ok subst -> Ok (s5
-                      `scompose` subst
-                      `scompose` s3
-                      `scompose` s2
-                      `scompose` s1
+                      -- `scompose` subst
+                      -- `scompose` s3
+                      -- `scompose` s2
+                      -- `scompose` s1
                      , s5 ns)
       Failure e -> Failure $ "Cond is not bool: " <> e
 
