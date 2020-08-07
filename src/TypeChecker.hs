@@ -1,3 +1,4 @@
+{-# LANGUAGE Strict #-}
 module TypeChecker where
 
 import Language
@@ -55,6 +56,7 @@ data Reply a b = Ok a
 type Subst = TypeVarName -> TypeExpression
 
 subType :: Subst -> TypeExpression -> TypeExpression
+subType _ te | trace ("subType: " <> show te) False = undefined
 subType phi (TypeVar tvn) = phi tvn
 subType phi (TypeConstructor tcn ts) = TypeConstructor tcn (map (subType phi) ts)
 
@@ -76,6 +78,7 @@ scompose :: Subst -> Subst -> Subst
 scompose sub2 sub1 tvn = subType sub2 (sub1 tvn)
 
 extend :: Subst -> TypeVarName -> TypeExpression -> Reply Subst String
+extend _ tvn t | trace "extend" False = undefined
 extend phi tvn t
   | t == TypeVar tvn        = Ok phi
   | tvn `elem` typeVarsIn t = Failure "extend failed"
@@ -92,6 +95,7 @@ extend phi tvn t
 -- subType phi t1 == subType phi t2
 --
 unify :: Subst -> (TypeExpression, TypeExpression) -> Reply Subst String
+unify _ tc | trace ("Unify: " <> show tc) False = undefined
 unify phi ((TypeVar tvn), t)
   | phitvn == TypeVar tvn = extend phi tvn phit
   | otherwise = unify phi (phitvn, phit)
@@ -179,7 +183,7 @@ typeCheck ::
   NameSupply ->
   VExpr ->
   Reply (Subst, TypeExpression) String
--- typeCheck gamma ns x | trace ("Gamma " <> show gamma <> "\nNS " <> show ns <> "\nX " <> show x <> "\n") False = undefined
+typeCheck gamma ns x | trace ("typeCheck Gamma " <> show gamma <> "\nNS " <> show ns <> "\nX " <> show x <> "\n") False = undefined
 typeCheck gamma ns (EVar x) = typeCheckVar gamma ns x
 typeCheck gamma ns (ENum x) = typeCheckNum gamma ns x
 typeCheck gamma ns (EStr x) = typeCheckStr gamma ns x
@@ -214,6 +218,7 @@ typeCheckLambda ::
   Name ->
   VExpr ->
   Reply (Subst, TypeExpression) String
+typeCheckLambda g ns x e | trace "typeCheckLambda" False = undefined
 typeCheckLambda gamma ns x e =
   typeCheckLambda1 tvn (typeCheck gamma' ns' e)
   where
@@ -258,26 +263,42 @@ typeCheckLet2 phi (Failure _) = Failure "failed in let2"
 typeCheckLet2 phi (Ok (phi', t))
   = Ok (phi' `scompose` phi, t)
 
+typeCheckIfThenElse
+  :: [(TypeVarName, TypeScheme)]
+  -> [Int]
+  -> Expr Name
+  -> Expr Name
+  -> Expr Name
+  -> Reply (Subst, TypeExpression) [Char]
+typeCheckIfThenElse gamma _ _ _ _ | trace ("typeCheckIfThenElse: " <> show gamma) False = undefined
 typeCheckIfThenElse gamma ns cond leftHand rightHand =
-  -- check that a is bool
-  let condInferred = typeCheck gamma ns cond
-      -- condChecked = case condInferred of
-      --   Ok (phi, tyExpr) -> unify (idSubstitution) (tyExpr, bool)
-      --   Failure e -> Failure e
+  let (Ok (s1, condInferred)) = typeCheck gamma ns cond
+      (Ok (s2, leftHandInferred)) = typeCheck gamma ns leftHand
+      (Ok (s3, rightHandInferred)) = typeCheck gamma ns rightHand
+      maybeSubst = unify idSubstitution (condInferred, bool)
+      (Ok s5) = -- error "fuck"
+        unify s2 (leftHandInferred, rightHandInferred)
   in
-    case condInferred of
-        Ok (phi, tyExpr) ->
-          let maybeSubst = unify idSubstitution (tyExpr, bool)
-          in case maybeSubst of
-            Ok subst -> Ok (subst, subst ns)
-            Failure e -> Failure $ "Cond is not bool: " <> e
-        Failure e -> Failure $ "Hmm " <> e
+    case maybeSubst of
+      Ok subst -> Ok (s5
+                      `scompose` subst
+                      `scompose` s3
+                      `scompose` s2
+                      `scompose` s1
+                     , s5 ns)
+      Failure e -> Failure $ "Cond is not bool: " <> e
 
 -- addDeclarations is to update the type environment, gamma,
 -- so that it associates schematic types from the types ts with
 -- the variables xs
 -- the variables that become schematic are those that are not unknown
 addDeclarations :: TypeEnv -> NameSupply -> [Name] -> [TypeExpression] -> TypeEnv
+addDeclarations te ns names tes
+  | trace ("addDeclare: "
+           <> show te <> " "
+           <> show ns <> " "
+           <> show names <> " "
+           <> show tes) False = undefined
 addDeclarations gamma ns xs ts =
   ((map nameToNumber xs) `zip` schemes) ++ gamma
   where
@@ -373,7 +394,9 @@ compose :: Foldable t => t (b -> b) -> b -> b
 compose fs v = foldl (flip (.)) id fs $ v
 
 arrowize :: CoreScDefn -> Reply (Subst, TypeExpression) b -> TypeEnv
--- arrowize te (Ok (s, t)) | trace ("CoreSC: " <> show te <> " EX: " <> show t) False = undefined
+arrowize te (Ok (s, t))
+  | trace ("arrowize CoreSC: " <> show te <> " EX: " <> show t) False
+  = undefined
 arrowize (name, vars, _) (Ok (s, t)) = case length vars of
   _ -> addDeclarations [] [0] [name] [t]
 
