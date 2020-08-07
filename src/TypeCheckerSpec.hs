@@ -168,13 +168,23 @@ spec = do
 --         `shouldBe`
 --         "Ok: [(\"even\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"bool\" []])),(\"id\",Scheme [[0]] (TypeConstructor \"arrow\" [TypeVar [0],TypeVar [0]])),(\"max\",Scheme [] (TypeConstructor \"int\" [])),(\"test\",Scheme [] (TypeConstructor \"bool\" []))]"
 
+--     it "works for an if then else" $ do
+--       runTest
+--         [(nameToNumber "greaterThan", Scheme [] (arrow int (arrow int bool)))]
+--         [r|
+-- id x = x
+-- max z n = if greaterThan z n then id z else id n
+-- test = max 1 2
+--           |]
+--           `shouldBe`
+--           "Ok: [(\"greaterThan\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"bool\" []]])),(\"max\",Scheme [[0],[2],[4]] (TypeConstructor \"arrow\" [TypeVar [0],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]]))]"
+
     it "works for an if then else" $ do
       runTest
         [(nameToNumber "greaterThan", Scheme [] (arrow int (arrow int bool)))]
         [r|
 id x = x
-max z n = if greaterThan z n then id z else id n
-test = max 1 2
+max = if greaterThan 1 2 then id 3 else id 4
           |]
           `shouldBe`
           "Ok: [(\"greaterThan\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"bool\" []]])),(\"max\",Scheme [[0],[2],[4]] (TypeConstructor \"arrow\" [TypeVar [0],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]]))]"

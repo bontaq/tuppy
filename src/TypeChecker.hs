@@ -1,4 +1,4 @@
--- {-# LANGUAGE Strict #-}
+{-# LANGUAGE Strict #-}
 module TypeChecker where
 
 import Language
@@ -201,7 +201,7 @@ typeCheck gamma ns (EIf a b c) = typeCheckIfThenElse gamma ns a b c
 typeCheck gamma ns (Ann _ t e) = typeCheck gamma ns e
 -- typeCheck _ _ e = error $ "No good: " <> show e
 
--- typeCheckAp typeenv ns e1 e2 | trace (show typeenv) False = undefined
+typeCheckAp typeenv ns e1 e2 | trace ("typeCheckAp: " <> show typeenv) False = undefined
 typeCheckAp gamma ns e1 e2 =
   typeCheckAp1 tvn (typeCheckList gamma ns' [e1, e2])
   where
@@ -278,16 +278,16 @@ typeCheckIfThenElse gamma ns cond leftHand rightHand =
   let (Ok (s1, condInferred)) = typeCheck gamma ns cond
       (Ok (s2, leftHandInferred)) = typeCheck gamma ns leftHand
       (Ok (s3, rightHandInferred)) = typeCheck gamma ns rightHand
-      -- maybeSubst = unify idSubstitution (condInferred, bool)
+      maybeSubst = unify idSubstitution (condInferred, bool)
       (Ok s5) = -- error "fuck"
         unify s2 (leftHandInferred, rightHandInferred)
   in
-    case (Ok s5) of
+    case maybeSubst of
       Ok subst -> Ok (s5
                       `scompose` subst
                       `scompose` s3
                       `scompose` s2
-                      -- `scompose` s1
+                      `scompose` s1
                      , s5 ns)
       Failure e -> Failure $ "Cond is not bool: " <> e
 
