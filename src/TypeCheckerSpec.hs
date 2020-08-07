@@ -150,7 +150,9 @@ spec = do
       runTest
         [(nameToNumber "greaterThan", Scheme [] (arrow int (arrow int bool)))]
         [r|
-max = if greaterThan 4 2 then 0 else 1
+id z = z
+max x y = if greaterThan x y then id x else id y
+test = max 1 2
           |]
           `shouldBe`
           "Ok: [(\"greaterThan\",Scheme [] (TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"arrow\" [TypeConstructor \"int\" [],TypeConstructor \"bool\" []]])),(\"max\",Scheme [[0],[2],[4]] (TypeConstructor \"arrow\" [TypeVar [0],TypeConstructor \"arrow\" [TypeVar [2],TypeVar [4]]]))]"
