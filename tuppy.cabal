@@ -47,6 +47,7 @@ library
       , raw-strings-qq
       , optparse-applicative
       , holmes
+      , hashable
   default-language: Haskell2010
 
 executable tuppy
@@ -62,6 +63,7 @@ executable tuppy
     , hspec
     , optparse-applicative
     , tuppy
+    , parallel
   default-language: Haskell2010
 
 executable tuppy-repl

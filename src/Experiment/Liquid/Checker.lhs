@@ -11,7 +11,7 @@ integer.
 
 Our existing hindley-milner inference:
 
-> import Experiment.Liquid.HM
+> import TypeChecker
 
 Our existing language, only starting with the subset of
 
@@ -69,15 +69,15 @@ since I don't know how this will work out, let's try
 
 > type LiquidTypeVars = [Int]
 >
-> collectInts :: TypeExpression -> [String]
-> collectInts (TypeConstructor "arrow" rest) =
->   [] <> (concat $ fmap collectInts rest)
-> collectInts (TypeConstructor name rest) =
+> collectNonArrows :: TypeExpression -> [String]
+> collectNonArrows (TypeConstructor "arrow" rest) =
+>   [] <> (concat $ fmap collectNonArrows rest)
+> collectNonArrows (TypeConstructor name rest) =
 >   [name]
 >
 > toTemplate :: (String, TypeScheme) -> (String, LiquidTypeVars)
 > toTemplate (name, (Scheme typeVars expr)) =
->   (name, (numberizeCollected $ collectInts expr))
+>   (name, (numberizeCollected $ collectNonArrows expr))
 >   where
 >     numberizeCollected n = [0..(length n - 1)]
 >
@@ -102,3 +102,17 @@ on to step 2!
   body’s type""
 
 So, constraint generation.
+
+Here is roughly their algorithm (focusing on if then else first)
+
+constraints :: Type -> Expression ->
+constraints typ expression = case expression of
+  EIf cond exprA exprB ->
+    let
+      f = fresh (hm (shape typ) expression)
+      (_, condConstraint) = constraints typ cond
+      (f2, exprAConstraint) = constraints (typ cond) exprA
+      (f3, exprBConstraint) = constraints (typ cond) exprB
+      -- f, c1 \/ c2 \/ c3 \/ { typ |- F}
+      --   \/ {typ; cond |- f2 <: f }
+      --   \/ {typ; cond |- f3 <: f}
