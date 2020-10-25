@@ -9,7 +9,7 @@ type Alter a = (Int, [a], Expr a)
 type CoreAlt = Alter Name
 
 data Expr a
-  = EVar Name             -- Variables
+  = EVar a                -- Variables
   | ENum Int              -- Numbers
   | EStr String           -- Strings
   | EAp (Expr a) (Expr a) -- Application

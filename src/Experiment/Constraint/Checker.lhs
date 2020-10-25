@@ -2,7 +2,7 @@
 > {-# LANGUAGE DeriveAnyClass #-}
 > {-# LANGUAGE DeriveGeneric #-}
 > {-# LANGUAGE DerivingStrategies #-}
-> module ConstraintBasedChecker where
+> module Constraint.Checker where
 
 > import GHC.Generics hiding (from)
 > import Data.Hashable
