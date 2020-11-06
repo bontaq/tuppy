@@ -20,7 +20,7 @@
 
 > test :: Config Holmes (Intersect Value)
 > test = let x = mempty
->            y = mempty
+>            y = 1
 >        in using
 >           [x, 1, y]
 
@@ -28,6 +28,6 @@
 >   :: forall m. MonadCell m
 >   => [Prop m (Intersect Value)]
 >   -> Prop m (Intersect Bool)
-> constraints test = all' (.== 1) test
+> constraints test = all' (./= 3) test
 
 > final = test `whenever` constraints
