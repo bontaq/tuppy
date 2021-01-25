@@ -1,0 +1,167 @@
+typeFree a = TypeFree (Global a)
+
+env = [ (Global "y", HasType (TypeFree (Global "a")))
+      , (Global "a", HasKind Star) ]
+
+id = Lambda (Inferable (Bound 0))
+
+termOne =
+  Annotated
+    (Lambda (Inferable (Bound 0)))
+    (Function (TypeFree (Global "a")) (TypeFree (Global "a")))
+  :@:
+  Inferable (Free (Global "y"))
+
+inferType
+  Context = [ (Global "y", HasType (TypeFree (Global "a")))
+        , (Global "a", HasKind Star) ]
+  TermInferable = termOne
+
+inferType'
+  0
+  Context = [ (Global "y", HasType (TypeFree (Global "a")))
+        , (Global "a", HasKind Star) ]
+  TermInferable = termOne
+
+inferType'
+  0
+  env
+  expr :@: expr
+
+inferType' i env
+  Annotated
+    (Lambda (Inferable (Bound 0)))
+    (Function (TypeFree (Global "a")) (TypeFree (Global "a")))
+
+
+inferType' i env
+  (Annotated expr type)
+  expr =
+    (Lambda (Inferable (Bound 0)))
+  type =
+    (Function (TypeFree (Global "a")) (TypeFree (Global "a")))
+
+-- 1st
+checkKind
+  env
+  (Function (TypeFree (Global "a")) (TypeFree (Global "a")))
+  Star
+
+checkKind env (Function k k')
+  k = (TypeFree (Global "a"))
+  k' = (TypeFree (Global "a"))
+  checkKind for both
+  checkKind env k Star
+
+checkKind env (TypeFree x) Star
+  x = (Global "a")
+  lookup x env = Just (HasKind Star)
+  -> Right ()
+
+-- 2nd
+checkType i env expr typ
+checkType
+  0
+  env
+  (Lambda (Inferable (Bound 0)))
+  (Function (TypeFree (Global "a")) (TypeFree (Global "a")))
+
+checkType i env (Lambda expr) (Function t t')
+  i = 0
+  env = env
+  expr = (Inferable (Bound 0))
+  t = (TypeFree (Global "a"))
+  t' = (TypeFree (Global "a"))
+
+checkType
+  i = (i + 1)
+  env = ((Local 0, HasType (TypeFree (Global "a"))) : env)
+  expr = (substCheckable 0 (Free (Local 0)) (Inferable (Bound 0)))
+  type = (TypeFree (Global "a"))
+
+substCheckable 0 (Free (Local 0)) (Inferable (Bound 0))
+  i = 0
+  r = (Free (Local 0))
+  expr = (Inferable (Bound 0))
+
+substCheckable 0 (Free (Local 0)) (Inferable expr)
+  expr = (Bound 0)
+  Inferable (substInferable 0 (Free (Local 0)) (Bound 0))
+
+subInferable i r (Bound j)
+  i = 0
+  r = (Free (Local 0))
+  j = 0
+  (Free (Local 0))
+
+substCheckable 0 (Free (Local 0)) (Inferable expr)
+  expr = (Bound 0)
+  Inferable (Free Local 0)
+
+checkType
+  i = (i + 1)
+  env = ((Local 0, HasType (TypeFree (Global "a"))) : env)
+  expr = (Free (Local 0))
+  type = (TypeFree (Global "a"))
+
+checkType 1 env (Free (Local 0)) (TypeFree (Global "a"))
+checkType i env (Inferable expr) type
+  i = 1
+  env = ((Local 0, HasType (TypeFree (Global "a"))) : env)
+  expr = (Free (Local 0))
+  type = (TypeFree (Global "a"))
+
+  inferType' 1 env (Free (Local 0))
+
+inferType i env (Free x)
+  i = 1
+  env = env
+  x = (Local 0)
+  lookup x = Just (HasType (TypeFree (Global "a")))
+  Right (TypeFree (Global "a"))
+
+
+checkType
+  i = (i + 1)
+  env = ((Local 0, HasType (TypeFree (Global "a"))) : env)
+  expr = (Free (Local 0))
+  type = (TypeFree (Global "a"))
+
+  typ' = (TypeFree (Global "a"))
+  if type /= typ then error
+  but clearly type == typ'
+
+back to inferType
+  omega =
+    (Function (TypeFree (Global "a")) (TypeFree (Global "a")))
+  case omega
+    Function t t'
+      t = TypeFree (Global "a")
+      t' = TypeFree (Global "a")
+      checkType i env expr' t
+
+checkType i env expr' t
+  i = 0
+  env = env
+  expr' = Inferable (Free (Global "y"))
+  t = TypeFree (Global "a")
+
+typ' <- inferType 0 env (Free (Global "y"))
+
+inferType 0 env (Free x)
+  x = (Global "y")
+  env [  (Global "y", HasType (TypeFree (Global "a"))) ]
+  lookup x
+    -> HasType t
+      t = Right (TypeFree (Global "a"))
+
+back to inferType
+  omega =
+    (Function (TypeFree (Global "a")) (TypeFree (Global "a")))
+  case omega
+    Function t t'
+      t = TypeFree (Global "a")
+      t' = TypeFree (Global "a")
+      passes: checkType i env expr' t
+      returns
+        TypeFree (Global "a")

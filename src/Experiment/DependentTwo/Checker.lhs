@@ -165,21 +165,27 @@ encountered.  On the initial call, this is 0.
 >     Left "type mismatch"
 >   else
 >     Right ()
+
+Because we are turning a bound variable into a free variable, we have
+to perform substitution on the body.
+
 > checkType i env (Lambda expr) (Function t t') =
 >   checkType (i + 1) ((Local i, HasType t) : env)
->             (substCheck 0 (Free (Local i)) expr) t'
+>             (substCheckable 0 (Free (Local i)) expr) t'
+
+The integer argument indicates which variable is to be substituted
 
 > substInferable :: Int -> TermInferable -> TermInferable -> TermInferable
-> substInferable i r (Annotated expr t) = Annotated (substCheck i r expr) t
+> substInferable i r (Annotated expr t) = Annotated (substCheckable i r expr) t
 > substInferable i r (Bound j) =
 >   if i == j then r else Bound j
 > substInferable i r (Free y) = Free y
 > substInferable i r (expr :@: expr') =
->   substInferable i r expr :@: substCheck i r expr'
+>   substInferable i r expr :@: substCheckable i r expr'
 
-> substCheck :: Int -> TermInferable -> TermCheckable -> TermCheckable
-> substCheck i r (Inferable expr) = Inferable (substInferable i r expr)
-> substCheck i r (Lambda expr) = Lambda (substCheck (i + 1) r expr)
+> substCheckable :: Int -> TermInferable -> TermCheckable -> TermCheckable
+> substCheckable i r (Inferable expr) = Inferable (substInferable i r expr)
+> substCheckable i r (Lambda expr) = Lambda (substCheckable (i + 1) r expr)
 
 quoting is needed to print the haskell functions, because normal haskell
 functions are unprintable
