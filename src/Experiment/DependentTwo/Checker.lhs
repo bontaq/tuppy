@@ -6,7 +6,12 @@ Inferable terms means that our algorithm can produce the type
 Checkable means that we need a type and then can check the term
 
 > data TermInferable
->   = Annotated TermCheckable Type
+>   = Annotated TermCheckable TermCheckable
+
+New terms for dependent types
+
+>   | Star
+>   | Pi TermCheckable TermCheckable
 
 Locally bound variables are represent by de Bruijn indices
 
@@ -47,19 +52,6 @@ variable into a free variable temporarily and use Local for that.
 >   | Quote Int
 >   deriving (Show, Eq)
 
-TypeFree: TypeIdentifier
-Function: An Arrow
-
-Name is reused
-
-In the simply typed lambda calculus, there are no bound names on
-the type level, so no TypeBound constructor
-
-> data Type
->   = TypeFree Name
->   | Function Type Type
->   deriving (Show, Eq)
-
 This is "higher-order abstract syntax" to represent values
 Values that are functions are represented using haskell functions
 This is so that we don't have to implement substitution ourselves
@@ -70,6 +62,11 @@ LambdaValue (\x -> LambdaValue (\y -> x))
 > data Value
 >   = LambdaValue (Value -> Value)
 >   | NeutralValue Neutral
+
+Also new for dependent types, since types are values and values type
+
+>   | StarValue
+>   | PiValue Value (Value -> Value)
 
 Still not sure what a neutral term is
 
@@ -90,6 +87,8 @@ a free variable
 >   Annotated expr _ -> evalCheckable expr env
 >   Free x           -> vfree x
 >   Bound i          -> env !! i
+>   Star             -> StarValue
+>   Pi t t'          -> PiValue (evalCheckable t env) (\x -> evalCheckable t' (x : env))
 >   e :@: e'         -> vapp (evalInferable e env) (evalCheckable e' env)
 
 > vapp :: Value -> Value -> Value
@@ -105,20 +104,22 @@ Be we can implement type checking, we have to define contexts.
 Context are implmented as (reversed) lists associating names with
 either * (HasKind Star) or a type (HasType t)
 
-> data Kind = Star
->   deriving (Show)
+data Kind = Star
+  deriving (Show)
 
-> data Info
->   = HasKind Kind
->   | HasType Type
->   deriving (Show)
+data Info
+  = HasKind Kind
+  | HasType Type
+  deriving (Show)
 
 Extending a context is achieved by the list "cons" operation.  Lookup
 is done via the haskell function lookup.  The context holds all our
 types for the environment
 
-> type Context = [(Name, Info)]
+Types are on the term level now, and we store the evaluated types
 
+> type Type = Value
+> type Context = [(Name, Type)]
 
 This will model results for type checking
 
@@ -130,38 +131,46 @@ returns Left or Right.  The well-formedness of types is done by CheckKind.
 Type checking functions are parameterized by the number of binders we have
 encountered.  On the initial call, this is 0.
 
-> checkKind :: Context -> Type -> Kind -> Result ()
-> checkKind env (TypeFree x) Star =
->   case lookup x env of
->     Just (HasKind Star) -> Right ()
->     Nothing             -> Left "unknown identifier"
-> checkKind env (Function k k') Star = do
->   checkKind env k Star
->   checkKind env k' Star
+checkKind :: Context -> Type -> Kind -> Result ()
+checkKind env (TypeFree x) Star =
+  case lookup x env of
+    Just (HasKind Star) -> Right ()
+    Nothing             -> Left "unknown identifier"
+checkKind env (Function k k') Star = do
+  checkKind env k Star
+  checkKind env k' Star
 
 > inferType :: Context -> TermInferable -> Result Type
 > inferType = inferType' 0
 >
 > inferType' :: Int -> Context -> TermInferable -> Result Type
-> inferType' i env (Annotated expr typ) = do
->   checkKind env typ Star
+> inferType' i env (Annotated expr pi) = do
+>   checkType i env pi StarValue
+>   let typ = evalCheckable pi []
 >   checkType i env expr typ
 >   pure typ
+> inferType' i env Star = Right StarValue
+> inferType' i env (Pi p p') = do
+>   checkType i env p StarValue
+>   let t = evalCheckable p []
+>   checkType (i + 1) ((Local i, t) : env)
+>     (substCheckable 0 (Free (Local i)) p') StarValue
+>   Right StarValue
 > inferType' i env (Free x) =
 >   case lookup x env of
->     Just (HasType t) -> Right t
->     Nothing          -> Left "unknown identifier"
+>     Just t  -> Right t
+>     Nothing -> Left "unknown identifier"
 > inferType' i env (expr :@: expr') = do
 >   omega <- inferType' i env expr
 >   case omega of
->     Function t t' -> do checkType i env expr' t
->                         Right t'
+>     PiValue t t' -> do checkType i env expr' t
+>                        Right (t' (evalCheckable expr' []))
 >     _             -> Left "illegal application"
 >
 > checkType :: Int -> Context -> TermCheckable -> Type -> Result ()
-> checkType i env (Inferable expr) typ = do
->   typ' <- inferType' i env expr
->   if (typ /= typ') then
+> checkType i env (Inferable expr) value = do
+>   value' <- inferType' i env expr
+>   if (quote value /= quote value') then
 >     Left "type mismatch"
 >   else
 >     Right ()
@@ -169,9 +178,10 @@ encountered.  On the initial call, this is 0.
 Because we are turning a bound variable into a free variable, we have
 to perform substitution on the body.
 
-> checkType i env (Lambda expr) (Function t t') =
->   checkType (i + 1) ((Local i, HasType t) : env)
->             (substCheckable 0 (Free (Local i)) expr) t'
+> checkType i env (Lambda expr) (PiValue t t') =
+>   checkType (i + 1) ((Local i, t) : env)
+>             (substCheckable 0 (Free (Local i)) expr)
+>             (t' (vfree (Local i)))
 
 The integer argument indicates which variable is to be substituted
 
@@ -180,6 +190,9 @@ The integer argument indicates which variable is to be substituted
 > substInferable i r (Bound j) =
 >   if i == j then r else Bound j
 > substInferable i r (Free y) = Free y
+> substInferable i r Star = Star
+> substInferable i r (Pi t t') =
+>   Pi (substCheckable i r t) (substCheckable (i + 1) r t')
 > substInferable i r (expr :@: expr') =
 >   substInferable i r expr :@: substCheckable i r expr'
 
@@ -196,6 +209,8 @@ functions are unprintable
 > quote' :: Int -> Value -> TermCheckable
 > quote' i (LambdaValue f)  = Lambda (quote' (i + 1) (f (vfree $ Quote i)))
 > quote' i (NeutralValue n) = Inferable (neutralQuote i n)
+> quote' i StarValue        = Inferable Star
+> quote' i (PiValue v f)    = Inferable (Pi (quote' i v) (quote' (i + 1) (f (vfree (Quote i)))))
 
 > neutralQuote :: Int -> Neutral -> TermInferable
 > neutralQuote i (FreeNeutral x)    = boundfree i x
@@ -205,10 +220,10 @@ functions are unprintable
 > boundfree i (Quote k) = Bound (i - k - 1)
 > boundfree i x         = Free x
 
-> typeFree a = TypeFree (Global a)
-> free x = Inferable (Free (Global x))
-> id' = Lambda (Inferable (Bound 0))
-> termOne = (Annotated id' (Function (typeFree "a") (typeFree "a"))) :@: free "y"
-> envOne = [ (Global "y", HasType (typeFree "a"))
->          , (Global "a", HasKind Star)
->          , (Global "b", HasKind Star) ]
+typeFree a = TypeFree (Global a)
+free x = Inferable (Free (Global x))
+id' = Lambda (Inferable (Bound 0))
+termOne = (Annotated id' (Function (typeFree "a") (typeFree "a"))) :@: free "y"
+envOne = [ (Global "y", HasType (typeFree "a"))
+         , (Global "a", HasKind Star)
+         , (Global "b", HasKind Star) ]
