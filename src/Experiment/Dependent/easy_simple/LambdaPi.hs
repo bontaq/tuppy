@@ -1,3 +1,8 @@
+--
+-- parseIO "" (isparse lp) "let id = (\\a x -> x) :: forall (a :: *) . a -> a"
+--
+
+
 {-# LINE 149 "LP.lhs" #-}
   module Main where
 {-# LINE 152 "LP.lhs" #-}
@@ -178,6 +183,7 @@
           reserved lambdaPi "="
           t <- parseITerm_ 0 e
           trace (show t) $ reserved lambdaPi ""
+          -- error (show t)
           return (Let x t)
     <|> do
           reserved lambdaPi "assume"
@@ -281,7 +287,7 @@
            xs <- many1 (identifier lambdaPi)
            reservedOp lambdaPi "->"
            t <- parseCTerm_ 0 (reverse xs ++ e)
-           --  reserved lambdaPi "."
+           -- reserved lambdaPi "."
            return (iterate Lam_ t !! length xs)
 {-# LINE 123 "Parser-LP.lhs" #-}
   toNat_ :: Integer -> ITerm_

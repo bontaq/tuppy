@@ -171,7 +171,7 @@ checkKind env (Function k k') Star = do
 > checkType i env (Inferable expr) value = do
 >   value' <- inferType' i env expr
 >   if (quote value /= quote value') then
->     Left "type mismatch"
+>     Left $ "type mismatch: " <> show (quote value) <> " " <> show (quote value')
 >   else
 >     Right ()
 
@@ -182,6 +182,7 @@ to perform substitution on the body.
 >   checkType (i + 1) ((Local i, t) : env)
 >             (substCheckable 0 (Free (Local i)) expr)
 >             (t' (vfree (Local i)))
+
 
 The integer argument indicates which variable is to be substituted
 
@@ -220,10 +221,48 @@ functions are unprintable
 > boundfree i (Quote k) = Bound (i - k - 1)
 > boundfree i x         = Free x
 
-typeFree a = TypeFree (Global a)
-free x = Inferable (Free (Global x))
-id' = Lambda (Inferable (Bound 0))
-termOne = (Annotated id' (Function (typeFree "a") (typeFree "a"))) :@: free "y"
-envOne = [ (Global "y", HasType (typeFree "a"))
-         , (Global "a", HasKind Star)
-         , (Global "b", HasKind Star) ]
+> typeFree a = Free (Global a)
+
+> free :: String -> TermCheckable
+> free x = Inferable (Free (Global x))
+
+> id' :: TermCheckable
+> id' = Lambda (Lambda (Inferable (Bound 0))) -- why another lambda?
+
+> termOne =
+>   (Annotated id'
+>     (Inferable (Pi (Inferable Star)
+>                (Inferable (Pi (Inferable (Bound 0)) (Inferable (Bound 1))))))) -- :@: free "y"
+
+> apTest =
+>   termOne :@: free "Bool" :@: free "y"
+
+Right (Inferable (Pi (Inferable (Free (Global "Bool"))) (Inferable (Free (Global "Bool")))))
+
+(Ann
+  (Lam (Lam (Inf (Bound 0)))
+  (Inf (Pi (Inf (Free (Global "a))) (Inf (Free (Global "a"))))
+
+> envOne = [ (Global "y", (vfree (Global "Bool")))
+>          , (Global "Bool", StarValue)
+>          , (Global "a", StarValue)
+>          , (Global "b", StarValue) ]
+ 
+playing with the results from the reference implementation
+
+let id = (\\a x -> x) :: forall (a :: *) . a -> a
+(Let "id"
+  (Ann_
+    (Lam_ (Lam_ (Inf_ (Bound_ 0))))
+    (Inf_ (Pi_ (Inf_ Star_) (Inf_ (Pi_ (Inf_ (Bound_ 0)) (Inf_ (Bound_ 1))))))
+    ))
+
+Annotated (Lambda (Lambda (Inferable (Bound 0))))
+  (Inferable (Pi (Inferable Star) (Inferable (Pi (Inferable (Free (Global "a"))) (Inferable (Free (Global "a")))))))
+
+let const = (\\a b x y -> x) :: forall (a :: *) (b :: *) . a -> b -> a
+(Let "const" (Ann_ (Lam_ (Lam_ (Lam_ (Lam_ (Inf_ (Bound_ 1)))))) (Inf_ (Pi_ (Inf_ Star_) (Inf_ (Pi_ (Inf_ Star_) (Inf_ (Pi_ (Inf_ (Bound_ 1)) (Inf_ (Pi_ (Inf_ (Bound_ 1)) (Inf_ (Bound_ 3))))))))))))
+
+Right (Inferable (Pi (Inferable Star)
+                     (Inferable (Pi (Inferable (Bound 0))
+                                    (Inferable (Bound 1))))))
