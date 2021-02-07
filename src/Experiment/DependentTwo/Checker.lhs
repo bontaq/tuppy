@@ -237,14 +237,20 @@ functions are unprintable
 > apTest =
 >   termOne :@: free "Bool" :@: free "y"
 
+> apTest2 =
+>   termOne :@: (Inferable (Annotated
+>                           -- (Inferable (Free (Global "y")))
+>                           (Lambda (Inferable (Bound 0)))
+>                           (Inferable (Free (Global "Bool")))))
+
 Right (Inferable (Pi (Inferable (Free (Global "Bool"))) (Inferable (Free (Global "Bool")))))
 
 (Ann
   (Lam (Lam (Inf (Bound 0)))
   (Inf (Pi (Inf (Free (Global "a))) (Inf (Free (Global "a"))))
 
-> envOne = [ (Global "y", (vfree (Global "Bool")))
->          , (Global "Bool", StarValue)
+> envOne = [ -- (Global "y", (vfree (Global "Bool")))
+>            (Global "Bool", StarValue)
 >          , (Global "a", StarValue)
 >          , (Global "b", StarValue) ]
  
@@ -256,6 +262,9 @@ let id = (\\a x -> x) :: forall (a :: *) . a -> a
     (Lam_ (Lam_ (Inf_ (Bound_ 0))))
     (Inf_ (Pi_ (Inf_ Star_) (Inf_ (Pi_ (Inf_ (Bound_ 0)) (Inf_ (Bound_ 1))))))
     ))
+
+λ> parseIO "" (isparse lp) "let y = 1"
+Ann_ (Succ_ Zero_) (Inf_ Nat_)
 
 Annotated (Lambda (Lambda (Inferable (Bound 0))))
   (Inferable (Pi (Inferable Star) (Inferable (Pi (Inferable (Free (Global "a"))) (Inferable (Free (Global "a")))))))
