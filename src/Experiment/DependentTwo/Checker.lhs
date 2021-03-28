@@ -1,3 +1,5 @@
+> {-# LANGUAGE MultiParamTypeClasses #-}
+> {-# LANGUAGE FunctionalDependencies #-}
 > module DependentTwo.Checker where
 
 Inferable and checkable terms are separated
@@ -232,16 +234,18 @@ functions are unprintable
 > termOne =
 >   (Annotated id'
 >     (Inferable (Pi (Inferable Star)
->                (Inferable (Pi (Inferable (Bound 0)) (Inferable (Bound 1))))))) -- :@: free "y"
+>                (Inferable
+>                 (Pi
+>                   (Inferable (Bound 0)) (Inferable (Bound 1))))))) -- :@: free "y"
 
 > apTest =
 >   termOne :@: free "Bool" :@: free "y"
 
-> apTest2 =
->   termOne :@: (Inferable (Annotated
->                           -- (Inferable (Free (Global "y")))
->                           (Lambda (Inferable (Bound 0)))
->                           (Inferable (Free (Global "Bool")))))
+apTest2 =
+  termOne :@: (Inferable (Annotated
+                          -- (Inferable (Free (Global "y")))
+                          (Lambda (Inferable (Bound 0)))
+                          (Inferable (Free (Global "Bool")))))
 
 Right (Inferable (Pi (Inferable (Free (Global "Bool"))) (Inferable (Free (Global "Bool")))))
 
@@ -249,10 +253,10 @@ Right (Inferable (Pi (Inferable (Free (Global "Bool"))) (Inferable (Free (Global
   (Lam (Lam (Inf (Bound 0)))
   (Inf (Pi (Inf (Free (Global "a))) (Inf (Free (Global "a"))))
 
-> envOne = [ -- (Global "y", (vfree (Global "Bool")))
->            (Global "Bool", StarValue)
->          , (Global "a", StarValue)
->          , (Global "b", StarValue) ]
+> envOne = [ (Global "y", (vfree (Global "Bool")))
+>           , (Global "Bool", StarValue)
+>           , (Global "a", StarValue)
+>           , (Global "b", StarValue) ]
  
 playing with the results from the reference implementation
 
